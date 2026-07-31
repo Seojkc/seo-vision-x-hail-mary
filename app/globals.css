@@ -1,4 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Agdasima&family=Quantico&display=swap');
 @import "tailwindcss";
+
+
+.science-fot {
+  font-family: "Agdasima", sans-serif;
+  font-weight: 700;
+}
+
+.quantico-bold {
+  font-family: "Quantico", sans-serif;
+  font-weight: 900;
+  font-style: bold;
+}
+.agdasima-regular {
+  font-family: "Agdasima", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 :root {
   --background: #ffffff;

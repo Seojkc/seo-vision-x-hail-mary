@@ -3,6 +3,11 @@
 import React, { useEffect, useRef } from "react";
 import Navbar from "./navbar";
 import Image from "next/image";
+import TypeHeading from "../Components/typeheading"
+import TypingSequence from "../Components/Typingsequence";
+
+
+
 
 // Smooth a closed loop of points into a soft blob outline
 function pointsToPath(points) {
@@ -47,7 +52,7 @@ export default function Welcome() {
     );
 
     // ---- Tunables ----
-    const REVEAL_RADIUS = 200;
+    const REVEAL_RADIUS = 150;
     const POS_STIFFNESS = 0.05;   // lower = slower / heavier drag behind cursor
     const POS_DAMPING = 0.80;     // lower = more overshoot/jiggle (springy droplet)
     const RAD_STIFFNESS = 0.09;
@@ -148,6 +153,10 @@ export default function Welcome() {
         };
     }, []);
 
+
+
+
+
     return (
         <section ref={sectionRef} id="home" className="relative min-h-screen overflow-hidden">
             <div className="absolute inset-0 z-50">
@@ -178,29 +187,30 @@ export default function Welcome() {
             </svg>
 
             <div className="pointer-events-none absolute bottom-0 right-0 z-10">
-                <div className="relative w-[min(600px,85vw)]">
+                <div className="relative w-[min(800px,85vw)]">
                     {/* Base layer — always fully visible, unchanged */}
                     <Image
-                        src="/Assets/face-dark.png"
+                        src="/Assets/facemask1.png"
                         alt="face"
-                        width={600}
-                        height={100}
+                        width={800}
+                        height={200}
                         className="relative z-10 h-auto w-full object-contain object-bottom"
                     />
 
                     {/* Top layer — revealed only inside the droplet-shaped mask */}
                     <Image
                         ref={maskRef}
-                        src="/Assets/facemask.png"
+                        src="/Assets/face.png"
                         alt="facemask"
-                        width={600}
-                        height={100}
+                        width={800}
+                        height={200}
                         className="absolute bottom-0 right-0 z-20 h-auto w-full object-contain object-bottom"
                         style={{
                             WebkitMaskImage: "url(#droplet-mask)",
                             maskImage: "url(#droplet-mask)",
                         }}
                     />
+                    
 
                     {/* Specular highlight — gives the reveal area a glossy "water surface" catch-light */}
                     <div
@@ -213,8 +223,23 @@ export default function Welcome() {
                             opacity: 0,
                         }}
                     />
+                    
                 </div>
+                
             </div>
+            <div className="absolute ml-5 p-0 agdasima-regular" style={{ opacity:1}}>
+            <TypingSequence
+                items={[
+                    { text: "", className: "text-4xl font-bold text-white mt-70 ml-5", style:"" },
+                    { text: "Seo James", className: "text-[16vw] font-bold text-white ml-30" },
+                    
+                ]}
+                speed={80}
+                />
+                    
+            </div>
+
+            
         </section>
     );
 }
