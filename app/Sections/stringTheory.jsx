@@ -7,7 +7,7 @@ import TypingSequence from "../Components/Typingsequence";
 // Config for the net effect — tweak freely
 const SPACING = 70;          // distance between grid points
 const RADIUS = 160;          // mouse influence radius
-const PULL_STRENGTH = 0.55;  // how far points get pulled toward the mouse (0-1)
+const PULL_STRENGTH = 0.85;  // how far points get pulled toward the mouse (0-1)
 const EASE = 0.12;           // how quickly points ease toward their target each frame
 const LINE_ALPHA = 0.12;
 const LINE_ALPHA_NEAR = 0.35;
@@ -17,7 +17,7 @@ const DOT_RADIUS = 1.2;
 
 // Defaults for any attractor that doesn't specify its own radius/strength
 const DEFAULT_ATTRACTOR_RADIUS = 220;
-const DEFAULT_ATTRACTOR_STRENGTH = 0.5;
+const DEFAULT_ATTRACTOR_STRENGTH = 1.7;
 
 
 
@@ -314,10 +314,10 @@ export default function Introduction() {
 
   return (
     <>
-      <div ref={boundaryRef} className="relative h-[50rem] overflow-hidden">
+      <div ref={boundaryRef} className="relative h-[50rem] overflow-hidden ">
         <NetBackground
           attractors={[
-            { ref: imageWrapperRef, radius: 240, strength: 0.55 },
+            { ref: imageWrapperRef, radius: 240, strength:0.8 },
           ]}
         />
        
@@ -346,6 +346,8 @@ export default function Introduction() {
               src="/Assets/space_shuttle.png"
               draggable={false}
             />
+
+            
           </div>
 
 
