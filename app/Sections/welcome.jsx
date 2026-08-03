@@ -154,6 +154,15 @@ export default function Welcome() {
     }, []);
 
 
+    const videoRef = useRef(null);
+    useEffect(()=>
+        {
+            if(videoRef.current){
+                videoRef.current.playbackRate = 1;
+            }
+
+        },[])
+
 
 
 
@@ -164,15 +173,20 @@ export default function Welcome() {
             </div>
 
             <video
-                src="/earthVideo.mp4"
+                src="/Assets/adrian-video.mp4"
+                ref={videoRef}
                 autoPlay
                 muted
                 loop
                 playsInline
-                className="absolute inset-0 h-full w-full object-cover opacity-50"
-            />
+                onEnded={(e) => {
+                    e.currentTarget.currentTime = 0;
+                    e.currentTarget.play();
+                  }}
+                className="absolute inset-0 h-full w-full object-cover opacity-90"
+                />
 
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/70" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/90" />
 
             {/* SVG mask: a soft-edged organic blob that morphs with mouse movement */}
             <svg width="0" height="0" style={{ position: "absolute" }}>
@@ -186,7 +200,7 @@ export default function Welcome() {
                 </defs>
             </svg>
 
-            <div className="pointer-events-none absolute bottom-0 right-0 z-10">
+            <div className="pointer-events-none absolute bottom-0 left-1/2 z-10 -translate-x-1/2">
                 <div className="relative w-[min(800px,85vw)]">
                     {/* Base layer — always fully visible, unchanged */}
                     <Image
@@ -227,11 +241,10 @@ export default function Welcome() {
                 </div>
                 
             </div>
-            <div className="absolute ml-5 p-0 agdasima-regular" style={{ opacity:1}}>
+            <div className="absolute  agdasima-regular" style={{ opacity:1}}>
             <TypingSequence
                 items={[
-                    { text: "", className: "text-4xl font-bold text-white mt-70 ml-5", style:"" },
-                    { text: "Seo James", className: "text-[16vw] font-bold text-white ml-30" },
+                    { text: "SEO JAMES", className: "text-[18vw]  font-bold  mt-60 mx-80 scaleY-15 glass-heading" },
                     
                 ]}
                 speed={80}

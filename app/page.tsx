@@ -7,8 +7,9 @@ export default function Home() {
     <div>
       
       <Welcome />
-      <Theory/>
       <Introduction/>
+      <Theory/>
+      
     </div>
   );
 }

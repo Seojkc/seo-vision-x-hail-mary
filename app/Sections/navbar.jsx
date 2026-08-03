@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const navLinks = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
-  { label: "Work", href: "#work" },
+  { label: "Resume", href: "#Resume" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -29,19 +29,19 @@ export default function Navbar()
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-500
         ${
           scrolled
-            ? "bg-black/55 backdrop-blur-l shadow-xl "
-            : "bg-transparent py-5"
+            ? " glass-notch"
+            : "glass-notch-top"
         }`}
     >
       <nav className="mx-auto flex h-20 max-w-6xl items-center justify-center px-6">
         
 
-        <ul className="hidden items-center gap-8 md:flex">
+        <ul className="hidden items-center gap-[100px] md:flex">
           {navLinks.map((link) => (
             <li key={link.href}>
               <a
                 href={link.href}
-                className="text-sm font-medium text-white/80 transition hover:text-white"
+                className="text-[24px] font-medium text-white/70 transition hover:text-white"
               >
                 {link.label}
               </a>
