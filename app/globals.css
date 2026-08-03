@@ -43,6 +43,10 @@
   position: relative;
 }
 
+.font-section-underline{
+  font-family: 'Departure Mono', 'Courier New', monospace;
+}
+
 .border-top-cardboard::before {
   content: "";
   position: absolute;

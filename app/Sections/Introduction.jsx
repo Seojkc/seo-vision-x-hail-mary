@@ -72,125 +72,6 @@ function MusicPlayer(props) {
 
 
 
-function SkillsMarquee() {
-    const skills = [
-        "Creative",
-        "Innovative",
-        "Adaptive",
-        "Curious",
-        "Strategic",
-        "Aesthetic",
-        "Explorative",
-      ];
-     
-      // Repeat the base list so one "set" is wider than the strip itself —
-      // that's what keeps the loop from ever showing a blank gap.
-      const REPEAT = 4;
-      const baseSet = Array.from({ length: REPEAT }, () => skills).flat();
-      const loopItems = [...baseSet, ...baseSet];
-     
-      const trackRef = useRef(null);
-      const offset = useRef(0);
-      const halfWidth = useRef(0);
-
-      const position = useRef(0);
-      const velocity = useRef(1); // base speed
-
-      const lastScrollY = useRef(0);
-      const boost = useRef(0);
-
-
-      useEffect(() => {
-
-        let frameId;
-      
-        function animate() {
-      
-          position.current += velocity.current + boost.current;
-      
-          boost.current *= 0.94; // smooth decay
-      
-          if (trackRef.current) {
-      
-            const halfWidth =
-              trackRef.current.scrollWidth / 2;
-      
-            if (position.current >= halfWidth) {
-              position.current -= halfWidth;
-            }
-      
-            trackRef.current.style.transform =
-              `translateX(-${position.current}px)`;
-          }
-      
-          frameId = requestAnimationFrame(animate);
-        }
-      
-        animate();
-      
-        return () => cancelAnimationFrame(frameId);
-      
-      }, []);
-
-      useEffect(() => {
-
-        lastScrollY.current = window.scrollY;
-      
-        function handleScroll() {
-      
-          const currentY = window.scrollY;
-      
-          const delta =
-            Math.abs(currentY - lastScrollY.current);
-      
-          lastScrollY.current = currentY;
-      
-          boost.current += delta * 0.03;
-        }
-      
-        window.addEventListener("scroll", handleScroll);
-      
-        return () =>
-          window.removeEventListener("scroll", handleScroll);
-      
-      }, []);
-
-     
-      return (
-        <>
-
-        <div className="relative w-full p-[20px] pt-[100px] ">
-          <div className="absolute mt-8 inset-0 flex items-center justify-center">
-            <div style={{ transform: "rotate(0deg)" }}>
-              <div className=" overflow-hidden">
-                <div ref={trackRef} className="flex w-max flex-nowrap animate-marquee-left" >
-                  {loopItems.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="mx-8 flex items-center  flex-shrink-0"
-                    >
-                      <span className="text-[#DBDBDB] text-6xl md:text-8xl font-black uppercase tracking-tight">
-                        {skill}
-                      </span>
-                    
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        
-
-
-
-        </>
-        
-      );
-  }
-
-
 
 
 export default function Introduction()
@@ -207,8 +88,8 @@ export default function Introduction()
         }}
         >
 
-            <p className="text-[#DBDBDB]  mt-14 ml-10">- Section One : Introduction</p>
-            <div className="flex justify-evenly">
+            <p className="text-[#DBDBDB]  mt-30 ml-10  font-section-underline">_// Section One : Introduction //_</p>
+            <div className="flex justify-evenly mb-[100px]">
                 <div>
                     <Image
                         src="/Assets/myself-1.png"
@@ -235,29 +116,9 @@ export default function Introduction()
                 </div>
             </div>
 
-            <div className="mt-40 mb-20">
-                <SkillsMarquee/>
+            
 
-            </div>
-
-            <div className="flex mt-[20%] mb-[20%]">
-
-                <Image
-                width={350}
-                height={200}
-                alt="grace-suit"
-                src="/Assets/grace-suit.png"
-                className="ml-[10%]"
-                />
-                <Image
-                width={400}
-                height={200}
-                alt="grace-suit"
-                src="/Assets/space-door.png"
-                className="right-[0%] absolute"
-                />
-
-            </div>
+            
 
             
 
