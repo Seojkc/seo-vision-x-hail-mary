@@ -400,7 +400,7 @@ export default function Introduction() {
 
   return (
     <>
-      <div ref={boundaryRef} className="relative h-[80rem] overflow-hidden ">
+      <div ref={boundaryRef} className="relative h-[70rem] overflow-hidden ">
         <NetBackground attractors={attractors} />
 
         <div className="relative z-10 pointer-events-none h-full">
@@ -437,7 +437,7 @@ export default function Introduction() {
           {/* follower ship — lower z-index, placed underneath */}
           <div
             ref={followerWrapperRef}
-            className="absolute pointer-events-auto z-10 top-[26vw] right-[4vw]"
+            className="absolute pointer-events-none z-10 top-[26vw] right-[4vw]"
             style={
               followerPosition
                 ? {

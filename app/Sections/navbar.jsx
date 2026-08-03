@@ -25,32 +25,29 @@ export default function Navbar()
   }, []);
 
   return (
-    <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500
-        ${
-          scrolled
-            ? " glass-notch"
-            : "glass-notch-top"
-        }`}
-    >
-      <nav className="mx-auto flex h-20 max-w-6xl items-center justify-center px-6">
-        
+    <header className="fixed inset-x-0 top-0 z-50  flex justify-center " >
+      <div  className={scrolled ? "glass-notch" : "glass-notch-top"}>
 
-        <ul className="hidden items-center gap-[100px] md:flex">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                className="text-[24px] font-medium text-white/70 transition hover:text-white"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <nav className="mx-auto flex h-20 max-w-6xl items-center justify-center px-6">
+          
 
-        
-      </nav>
+          <ul className="hidden items-center gap-[100px] md:flex">
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  className="text-[24px] font-medium text-white/70 transition hover:text-white"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          
+        </nav>
+      </div>
+      
     </header>
   );
 }

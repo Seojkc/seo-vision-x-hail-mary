@@ -199,7 +199,7 @@ export default function Introduction()
         <>
         
         <section
-        className="relative w-full h-auto overflow-hidden "
+        className="relative w-full h-auto overflow-hidden border-top-cardboard"
         style={{
             backgroundColor: "rgb(12, 12, 12)",
             backgroundImage: "radial-gradient(circle,rgba(49, 49, 49, 0.64) 1px, transparent 0.5px)",
@@ -240,7 +240,24 @@ export default function Introduction()
 
             </div>
 
-            
+            <div className="flex mt-[20%] mb-[20%]">
+
+                <Image
+                width={350}
+                height={200}
+                alt="grace-suit"
+                src="/Assets/grace-suit.png"
+                className="ml-[10%]"
+                />
+                <Image
+                width={400}
+                height={200}
+                alt="grace-suit"
+                src="/Assets/space-door.png"
+                className="right-[0%] absolute"
+                />
+
+            </div>
 
             
 
