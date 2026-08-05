@@ -43,6 +43,14 @@
   position: relative;
 }
 
+.perspective {
+  perspective: 800px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
 .font-section-underline{
   font-family: 'Departure Mono', 'Courier New', monospace;
 }

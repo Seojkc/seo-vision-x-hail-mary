@@ -108,7 +108,7 @@ function SkillsMarquee() {
         <>
 
         <div className="relative w-full p-[20px] pt-[100px] ">
-          <div className="absolute mt-8 inset-0 flex items-center justify-center">
+          <div className="absolute mt-8 inset-0 flex items-center overflow-hidden justify-center">
             <div style={{ transform: "rotate(0deg)" }}>
               <div className=" overflow-hidden">
                 <div ref={trackRef} className="flex w-max flex-nowrap animate-marquee-left" >
@@ -141,20 +141,22 @@ function SkillsMarquee() {
 
 
 
-
 // ---- helpers ----
 const clamp = (v, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 const lerp = (a, b, t) => a + (b - a) * t;
-
-// Each note: final scattered position (relative to center), rotation, and
-// the sub-range of overall progress during which it flies in.
+ 
+// Each note: final scattered position (relative to center), final rotation,
+// and `rise` — how far below its final spot (in vh) it starts. Because the
+// sticky wrapper below has overflow-hidden, a note sitting `rise` vh below
+// its target is simply clipped off-screen until scroll brings it up — so
+// there's no fade-in, it genuinely feels "stuck to the page" underneath.
 const NOTES = [
   {
     src: "/Assets/bug-fixed.png",
-    x: -34, // vw offset from center
-    y: -8,  // vh offset from center
+    x: -34, // vw offset from center (final, and held throughout — no horizontal drift)
+    y: -8,  // vh offset from center (final)
     rotate: -20,
-    from: { x: -10, y: 40 }, // enters from lower-left
+    rise: 75,
     width: 200,
   },
   {
@@ -162,7 +164,7 @@ const NOTES = [
     x: 30,
     y: -14,
     rotate: 10,
-    from: { x: 10, y: 45 },
+    rise: 75,
     width: 200,
   },
   {
@@ -170,7 +172,7 @@ const NOTES = [
     x: -28,
     y: 18,
     rotate: 30,
-    from: { x: -6, y: -45 },
+    rise: 50,
     width: 200,
   },
   {
@@ -178,7 +180,7 @@ const NOTES = [
     x: 34,
     y: 16,
     rotate: 0,
-    from: { x: 8, y: -45 },
+    rise: 70,
     width: 200,
   },
   {
@@ -186,32 +188,32 @@ const NOTES = [
     x: 0,
     y: 27,
     rotate: -10,
-    from: { x: 0, y: 55 },
+    rise: 60,
     width: 200,
   },
 ];
-
+ 
 // how much of the pinned/hold phase is used for staggering notes in
 const HOLD_START = 0.12;
 const HOLD_END = 0.86;
-
+ 
 export default function FunFacts() {
   const wrapperRef = useRef(null);
   const funFactsRef = useRef(null);
   const noteRefs = useRef([]);
   const rafRef = useRef(null);
-
+ 
   const update = useCallback(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
-
+ 
     const rect = wrapper.getBoundingClientRect();
     const vh = window.innerHeight;
     const scrollable = rect.height - vh;
-
+ 
     // 0 at start of pin, 1 at end of pin
     const progress = clamp(scrollable > 0 ? -rect.top / scrollable : 0);
-
+ 
     // --- fun facts scale: grow in (0 -> 0.12), hold, shrink out (0.86 -> 1)
     let scale = 1;
     if (progress < HOLD_START) {
@@ -221,37 +223,42 @@ export default function FunFacts() {
     } else {
       scale = 1.35;
     }
-
+ 
     if (funFactsRef.current) {
       funFactsRef.current.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
-
-    // --- each note staggers in during the hold window ---
+ 
+    // --- each note staggers up during the hold window ---
     const holdRange = HOLD_END - HOLD_START;
     const step = holdRange / NOTES.length;
-
+ 
     NOTES.forEach((note, i) => {
       const el = noteRefs.current[i];
       if (!el) return;
-
+ 
       const noteStart = HOLD_START + step * i;
-      const noteEnd = noteStart + step * 0.8; // finishes slightly before next starts
+      const noteEnd = noteStart + step * 0.9;
+ 
+      // RAW linear t — deliberately NOT eased. This is what makes the note
+      // travel at a rate tied directly to scroll distance, so it reads as
+      // "attached to the page" rather than flying in on its own timer.
       const t = clamp((progress - noteStart) / (noteEnd - noteStart));
-
-      // ease-out
-      const eased = 1 - Math.pow(1 - t, 3);
-
-      const tx = lerp(note.from.x, note.x, eased);
-      const ty = lerp(note.from.y, note.y, eased);
-      const opacity = clamp(t * 1.4);
-      const rot = lerp(note.rotate * 2.2, note.rotate, eased);
-      const noteScale = lerp(0.6, 1, eased);
-
+ 
+      // position: linear with scroll, x never moves
+      const tx = note.x;
+      const ty = lerp(note.y + note.rise, note.y, t);
+ 
+      // a gentle ease ONLY for rotation/scale — cosmetic settle, doesn't
+      // touch position so the scroll-linked feel stays intact
+      const eased = 1 - Math.pow(1 - t, 2);
+      const rotKick = i % 2 === 0 ? 14 : -14;
+      const rot = lerp(note.rotate + rotKick, note.rotate, eased);
+      const noteScale = lerp(0.88, 1, eased);
+ 
       el.style.transform = `translate(-50%, -50%) translate(${tx}vw, ${ty}vh) rotate(${rot}deg) scale(${noteScale})`;
-      el.style.opacity = opacity;
     });
   }, []);
-
+ 
   useEffect(() => {
     const onScroll = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -266,7 +273,7 @@ export default function FunFacts() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [update]);
-
+ 
   return (
     <div
       className="relative w-full pb-[8%]"
@@ -277,20 +284,18 @@ export default function FunFacts() {
         backgroundSize: "18px 18px",
       }}
     >
-      <p className="text-[#DBDBDB] pt-30 ml-10 font-section-underline">
-        _// Section two : Fun facts //_
-      </p>
-
+      
+ 
       {/* tall scroll track that drives the whole pinned sequence */}
       <div ref={wrapperRef} className="relative" style={{ height: "600vh" }}>
+        {/* overflow-hidden here is what clips each note until scroll
+            brings it up from below — no opacity animation needed */}
         <div className="sticky top-0 h-screen w-full overflow-hidden">
-          {/* scattered notes, centered, animated in via refs */}
           {NOTES.map((note, i) => (
             <div
               key={note.src}
               ref={(el) => (noteRefs.current[i] = el)}
               className="absolute left-1/2 top-1/2 will-change-transform"
-              style={{ opacity: 0 }}
             >
               <Image
                 width={note.width}
@@ -301,11 +306,16 @@ export default function FunFacts() {
             </div>
           ))}
 
-          {/* centered fun-facts heading image, pinned + scaling */}
+<p className="text-[#218a13] pt-30 ml-10 font-section-underline">
+              _// Section two : Fun facts //_
+            </p>
+ 
+          {/* centered fun-facts heading image, pinned + scaling — unchanged */}
           <div
             ref={funFactsRef}
             className="absolute left-1/2 top-1/2 z-20 will-change-transform"
           >
+           
             <Image
               width={250}
               height={200}
@@ -315,14 +325,10 @@ export default function FunFacts() {
           </div>
         </div>
       </div>
-
-
+ 
       <div className="mt-50">
-            <SkillsMarquee/>
-
-        </div>
-
-
+        <SkillsMarquee />
+      </div>
     </div>
   );
 }
