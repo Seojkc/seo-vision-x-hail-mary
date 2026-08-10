@@ -202,7 +202,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 
   box-shadow:
-    0 20px 40px rgba(2,2,2,0.548),
+    0 10px 10px rgba(2,2,2,0.548),
     inset 0 2px 8px rgba(255,255,255,0.35),
     inset 0 -4px 10px rgba(0,0,0,0.25);
 
@@ -323,3 +323,30 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+
+.butterfly-wiggle {
+  animation: butterflyWiggle 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes butterflyWiggle {
+  0% {
+      transform: translate(0, 0) rotate(0deg);
+  }
+
+  
+
+  25% {
+      transform: translate(8px, -15px) rotate(7deg);
+  }
+
+  75% {
+      transform: translate(-8px, -5px) rotate(-6deg);
+  }
+  100% {
+      transform: translate(0, 0) rotate(0deg);
+  }
+}
+

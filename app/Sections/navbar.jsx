@@ -9,6 +9,55 @@ const navLinks = [
   { label: "Contact", href: "#contact" },
 ];
 
+
+export  function Logo() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <h1
+      className={`
+        fixed top-10 left-10 z-50
+        text-2xl font-semibold
+        transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
+        ${scrolled
+          ? "scale-90 opacity-90 tracking-tight"
+          : "scale-100 opacity-100 tracking-normal"
+        }
+      `}
+    >
+      <span
+        className={`
+          inline-block transition-all duration-500
+          ${scrolled ? "opacity-0 -translate-y-2 absolute" : "opacity-100 translate-y-0"}
+        `}
+      >
+        SeoVision
+      </span>
+
+      <span
+        className={`
+          inline-block transition-all duration-500
+          ${scrolled ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
+        `}
+      >
+        SeV
+      </span>
+    </h1>
+  );
+}
+
+
+
+
 export default function Navbar() 
 {
   const [scrolled, setScrolled] = useState(false);
@@ -26,8 +75,11 @@ export default function Navbar()
 
   return (
     <header className="fixed inset-x-0 top-0 z-50  flex justify-center " >
-      <div  className={scrolled ? "glass-notch" : "glass-notch-top"}>
 
+      <Logo/>
+
+
+      <div  className={scrolled ? "glass-notch" : "glass-notch-top"}>
         <nav className="mx-auto flex h-20 max-w-6xl items-center justify-center px-6">
           
 
@@ -47,6 +99,9 @@ export default function Navbar()
           
         </nav>
       </div>
+
+
+      
       
     </header>
   );

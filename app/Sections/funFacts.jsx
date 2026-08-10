@@ -1,176 +1,224 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef,useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* =========================================================================
+   Skills marquee (unchanged from your original)
+   ========================================================================= */
 function SkillsMarquee() {
-    const skills = [
-        "Creative",
-        "Innovative",
-        "Adaptive",
-        "Curious",
-        "Strategic",
-        "Aesthetic",
-        "Explorative",
-      ];
-     
-      // Repeat the base list so one "set" is wider than the strip itself —
-      // that's what keeps the loop from ever showing a blank gap.
-      const REPEAT = 4;
-      const baseSet = Array.from({ length: REPEAT }, () => skills).flat();
-      const loopItems = [...baseSet, ...baseSet];
-     
-      const trackRef = useRef(null);
-      const offset = useRef(0);
-      const halfWidth = useRef(0);
+  const skills = [
+    "Creative",
+    "Innovative",
+    "Adaptive",
+    "Curious",
+    "Strategic",
+    "Aesthetic",
+    "Explorative",
+  ];
 
-      const position = useRef(0);
-      const velocity = useRef(1); // base speed
+  const REPEAT = 4;
+  const baseSet = Array.from({ length: REPEAT }, () => skills).flat();
+  const loopItems = [...baseSet, ...baseSet];
 
-      const lastScrollY = useRef(0);
-      const boost = useRef(0);
+  const trackRef = useRef(null);
+  const position = useRef(0);
+  const velocity = useRef(1);
+  const boost = useRef(0);
+  const sectionRef = useRef(null);
+  const isVisibleRef = useRef(false);
 
-      const sectionRef = useRef(null);
-const isVisibleRef = useRef(false);
-const frameId = useRef(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      },
+      { threshold: 0.1 }
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-useEffect(() => {
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      isVisibleRef.current = entry.isIntersecting;
-    },
-    {
-      threshold: 0.1,
+  useEffect(() => {
+    let frameId;
+    function animate() {
+      position.current += velocity.current + boost.current;
+      boost.current *= 0.2;
+
+      if (trackRef.current) {
+        const halfWidth = trackRef.current.scrollWidth / 2;
+        if (position.current >= halfWidth) position.current -= halfWidth;
+        trackRef.current.style.transform = `translateX(-${position.current}px)`;
+      }
+      frameId = requestAnimationFrame(animate);
     }
-  );
+    animate();
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
-  if (sectionRef.current) {
-    observer.observe(sectionRef.current);
-  }
-
-  return () => observer.disconnect();
-}, []);
-
-
-
-
-
-      useEffect(() => {
-
-        let frameId;
-      
-        function animate() {
-      
-          position.current += velocity.current + boost.current;
-      
-          boost.current *= 0.2; // smooth decay
-      
-          if (trackRef.current) {
-      
-            const halfWidth =
-              trackRef.current.scrollWidth / 2;
-      
-            if (position.current >= halfWidth) {
-              position.current -= halfWidth;
-            }
-      
-            trackRef.current.style.transform =
-              `translateX(-${position.current}px)`;
-          }
-      
-          frameId = requestAnimationFrame(animate);
-        }
-      
-        animate();
-      
-        return () => cancelAnimationFrame(frameId);
-      
-      }, []);
-
-      
-     
-      return (
-        <>
-
-        <div className="relative w-full p-[20px] pt-[100px]  ">
-          <div className="absolute mt-8  mb-[50px] inset-0 flex items-center justify-center">
-            <div style={{ transform: "rotate(0deg)" }}>
-              <div className="  ">
-                <div ref={trackRef} className="flex w-max flex-nowrap animate-marquee-left " >
-                  {loopItems.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="mx-8 flex items-center  flex-shrink-0"
-                    >
-                      <span className="text-[#0c0c0c] bree-serif-regular  text-6xl md:text-6xl font-black  tracking-tight">
-                        {skill}
-                      </span>
-                    
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+  return (
+    <div className="relative w-full p-[20px] pt-[100px]">
+      <div className="absolute mt-8 mb-[50px] inset-0 flex items-center justify-center">
+        <div style={{ transform: "rotate(0deg)" }}>
+          <div
+            ref={trackRef}
+            className="flex w-max flex-nowrap animate-marquee-left"
+          >
+            {loopItems.map((skill, i) => (
+              <span key={i} className="mx-8 flex items-center flex-shrink-0">
+                <span className="text-[#0c0c0c] bree-serif-regular text-6xl md:text-6xl font-black tracking-tight">
+                  {skill}
+                </span>
+              </span>
+            ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        
+/* =========================================================================
+   ScaledScene
+   -------------------------------------------------------------------------
+   Every prop/decoration inside the scene is positioned with fixed pixel
+   coordinates against a fixed-size "canvas" (SCENE_WIDTH x SCENE_HEIGHT).
+   On resize we only ever change a single uniform `scale` factor applied to
+   that canvas — so every item shrinks together and NEVER changes position
+   relative to the others, and (as long as the base layout doesn't overlap)
+   nothing can ever start overlapping at any viewport width.
+   ========================================================================= */
+const SCENE_WIDTH = 1600;
+const SCENE_HEIGHT = 860;
+
+function ScaledScene({ children, visible }) {
+  const outerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+
+    const updateScale = () => {
+      const w = el.offsetWidth;
+      setScale(Math.min(1, w / SCENE_WIDTH));
+    };
+
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={outerRef}
+      className="relative w-full"
+      style={{ height: SCENE_HEIGHT * scale, overflow: "hidden" }}
+    >
+      <div
+        style={{
+          width: SCENE_WIDTH,
+          height: SCENE_HEIGHT,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* A single decorative item: fixed x/y/w on the SCENE canvas, a staggered
+   fade-up "ease-in" entrance animation driven by `visible`, and an
+   optional small subheading caption placed above or below the image. */
+function SceneItem({
+  x,
+  y,
+  w,
+  rotate = 0,
+  delay = 0,
+  visible,
+  label,
+  labelPos = "bottom", // "top" | "bottom"
+  labelRotate = -2,
+  children,
+}) {
+  return (
+    <div
+      className="absolute"
+      style={{
+        left: x,
+        top: y,
+        width: w,
+        transform: visible
+          ? `translateY(0px) rotate(${rotate}deg)`
+          : `translateY(24px) rotate(${rotate}deg)`,
+        opacity: visible ? 1 : 0,
+        transition: `opacity 700ms ease-in ${delay}ms, transform 700ms ease-in ${delay}ms`,
+      }}
+    >
+      {label && labelPos === "top" && (
+        <span
+          className="scene-label"
+          style={{ bottom: "100%", marginBottom: 10, transform: `rotate(${labelRotate}deg)` }}
+        >
+          {label}
+        </span>
+      )}
+
+      {children}
+
+      {label && labelPos === "bottom" && (
+        <span
+          className="scene-label"
+          style={{ top: "100%", marginTop: 10, transform: `rotate(${labelRotate}deg)` }}
+        >
+          {label}
+        </span>
+      )}
+
+
+      {label && labelPos === "right" && (
+        <span
+          className="scene-label"
+          
+        >
+          {label}
+        </span>
+      )}
 
 
 
-        </>
-        
-      );
-  }
+      <style jsx>{`
+        .scene-label {
+          position: absolute;
+          left: 6px;
+          font-family: var(--font-mono, ui-monospace, monospace);
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          color: #0c0c0c;
+          white-space: nowrap;
+          padding: 2px 0;
+          border-bottom: 1.5px dashed rgba(12, 12, 12, 0.55);
+        }
+      `}</style>
+    </div>
+  );
+}
 
-
-
-  
-
-
-
-// ---- helpers ----
-const clamp = (v, min = 0, max = 1) => Math.min(max, Math.max(min, v));
-const lerp = (a, b, t) => a + (b - a) * t;
- 
-// Each note: final scattered position (relative to center), final rotation,
-// and `rise` — how far below its final spot (in vh) it starts. Because the
-// sticky wrapper below has overflow-hidden, a note sitting `rise` vh below
-// its target is simply clipped off-screen until scroll brings it up — so
-// there's no fade-in, it genuinely feels "stuck to the page" underneath.
-const NOTES = [
-  { src: "/Assets/claude-helps.png", x: -28, y: 18, rotate: 30, width: 200 },
-  { src: "/Assets/late-night.png", x: 34, y: 16, rotate: 0, width: 200 },
-  { src: "/Assets/way-too-many.png", x: 0, y: 27, rotate: -10, width: 200 },
-];
-
-
-
-
-
-
+/* =========================================================================
+   Coffee mug — click to sip. The "take a sip" speech bubble stays
+   permanently on screen (it eases in once the section becomes visible,
+   then never disappears).
+   ========================================================================= */
 const GIF_SRC = "/Assets/FunFact/coffee-mug-video-2.gif";
 const GIF_DURATION_MS = 1200;
 const DISPLAY_WIDTH = 150;
 
-export function CoffeeToggle() {
+export function CoffeeToggle({ visible = true }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [replayKey, setReplayKey] = useState(0);
   const [aspectRatio, setAspectRatio] = useState(1);
@@ -214,16 +262,25 @@ export function CoffeeToggle() {
   return (
     <div
       onClick={handleClick}
-      className="absolute top-[30px] right-[30%] w-[150px] cursor-pointer"
-      style={{ aspectRatio }}
+      className="relative cursor-pointer"
+      style={{ width: DISPLAY_WIDTH, aspectRatio }}
     >
+      {/* speech bubble — eases in once, then stays put */}
+      <div
+        className="speech-bubble"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible
+            ? "translate(-50%, 0px) scale(1)"
+            : "translate(-50%, 8px) scale(0.85)",
+        }}
+      >
+        take a sip
+        <span className="speech-bubble-tail" />
+      </div>
+
       {/* static first frame, shown when idle */}
-      <canvas
-        ref={canvasRef}
-        className={`absolute inset-0 w-full h-full ${
-          isPlaying ? "opacity-100" : "opacity-100"
-        }`}
-      />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
       {/* real animated gif, only mounted while playing */}
       {isPlaying && (
@@ -231,20 +288,48 @@ export function CoffeeToggle() {
           key={replayKey}
           src={`${GIF_SRC}?play=${replayKey}`}
           alt="fun-fact-note"
-          className="absolute inset-0 w-full h-full opacity-100"
+          className="absolute inset-0 w-full h-full"
         />
       )}
+
+      <style jsx>{`
+        .speech-bubble {
+          position: absolute;
+          left: 50%;
+          top: -56px;
+          background: #ffffff;
+          color: #0c0c0c;
+          font-weight: 700;
+          font-size: 14px;
+          padding: 8px 14px;
+          border-radius: 14px;
+          border: 2px dotted #0c0c0c;
+          white-space: nowrap;
+          box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.12);
+          transition: opacity 700ms ease-in 260ms, transform 700ms ease-in 260ms;
+          pointer-events: none;
+          z-index: 5;
+        }
+        .speech-bubble-tail {
+          position: absolute;
+          bottom: -9px;
+          left: 24px;
+          width: 16px;
+          height: 16px;
+          background: #ffffff;
+          border-right: 2px dotted #0c0c0c;
+          border-bottom: 2px dotted #0c0c0c;
+          transform: rotate(45deg);
+        }
+      `}</style>
     </div>
   );
 }
 
-
-// how much of the pinned/hold phase is used for staggering notes in
-const HOLD_START = 0.12;
-const HOLD_END = 0.86;
- 
+/* =========================================================================
+   FunFacts
+   ========================================================================= */
 export default function FunFacts() {
-
   const wrapperRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -256,7 +341,7 @@ export default function FunFacts() {
       ([entry]) => {
         if (entry.isIntersecting) {
           setVisible(true);
-          observer.disconnect(); // fire once, never re-trigger
+          observer.disconnect();
         }
       },
       { threshold: 0.35 }
@@ -265,12 +350,12 @@ export default function FunFacts() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
- 
+
   return (
     <div
-      className="relative w-full "
+      className="relative w-full"
       style={{
-        backgroundColor:"#f5f5f5",
+        backgroundColor: "#f5f5f5",
         backgroundImage: `
           linear-gradient(to right, rgba(41,41,41,0.05) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(41,41,41,0.05) 1px, transparent 1px)
@@ -278,106 +363,202 @@ export default function FunFacts() {
         backgroundSize: "98px 98px",
       }}
     >
-
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-full "
-        style={{
-          background: "linear-gradient(to bottom,#F2F0EF, transparent 40%)",
-        }}
+        className="pointer-events-none absolute inset-x-0 top-0 h-full"
+        style={{ background: "linear-gradient(to bottom,#F2F0EF, transparent 40%)" }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-full "
-        style={{
-          background: "linear-gradient(to right,#F2F0EF, transparent 30%, transparent)",
-        }}
-      />
-
-        <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-full "
-        style={{
-          background: "linear-gradient(to left,#F2F0EF, transparent 30%, transparent)",
-        }}
+        className="pointer-events-none absolute inset-x-0 top-0 h-full"
+        style={{ background: "linear-gradient(to right,#F2F0EF, transparent 30%, transparent)" }}
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-full "
-        style={{
-          background: "linear-gradient(to top,#F2F0EF, transparent 10%, transparent)",
-        }}
+        className="pointer-events-none absolute inset-x-0 top-0 h-full"
+        style={{ background: "linear-gradient(to left,#F2F0EF, transparent 30%, transparent)" }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-full"
+        style={{ background: "linear-gradient(to top,#F2F0EF, transparent 10%, transparent)" }}
       />
 
-
-
-
-
-      
-      
- 
-      <div
-      ref={wrapperRef}
-      className="relative w-full h-screen overflow-hidden" >
-
-
-        <Image width={300} height={500} className=" -rotate-2 absolute top-[7vw] left-[6%]" alt="fun-fact-note" src="/Assets/FunFact/wall-poster.png" />
-
-        <CoffeeToggle/>
-
-
-        <Image width={200} height={500} className=" -rotate-10 absolute top-[35vw] right-[20%]" alt="fun-fact-note" src="/Assets/FunFact/flower-pot.png" />
- 
-        <Image width={200} height={500} className=" -rotate-2 absolute top-[8vw] left-[20%]" alt="fun-fact-note" src="/Assets/FunFact/bug-fix.png" />
-
-      <p className="text-[#218a13] pt-10 ml-10 font-section-underline">
-        _// Section two : Fun facts //_
+      <p className="absolute text-[#218a13] font-section-underline top-[4%] left-[3%]">
+        _// Section : Fun facts //_
       </p>
-      
-      
 
-      {NOTES.map((note, i) => (
+      <div ref={wrapperRef} className="relative w-full">
+        <ScaledScene visible={visible}>
+          <SceneItem
+            x={80}
+            y={80}
+            w={350}
+            delay={0}
+            visible={visible}
+            label="burning the midnight oil"
+            labelPos="bottom"
+            labelRotate={-1.5}
+          >
+            <Image
+              width={320}
+              height={500}
+              className="w-full h-auto"
+              alt="fun-fact-note"
+              src="/Assets/FunFact/night-window.png"
+            />
+          </SceneItem>
+
+          <SceneItem
+            x={600}
+            y={100}
+            w={130}
+            delay={80}
+            visible={visible}
+            label="daily drivers"
+            labelPos="bottom"
+            labelRotate={2}
+          >
+            <Image
+              width={160}
+              height={500}
+              className="w-full h-auto"
+              alt="fun-fact-note"
+              src="/Assets/FunFact/claude-gpt.png"
+            />
+          </SceneItem>
+
+          <SceneItem
+            x={1250}
+            y={150}
+            w={200}
+            delay={140}
+            visible={visible}
+            label="tiny jungle"
+            labelPos="top"
+            labelRotate={-1.5}
+          >
+            <Image
+              width={250}
+              height={500}
+              className="w-full h-auto"
+              alt="fun-fact-note"
+              src="/Assets/FunFact/wall-decor-4.png"
+            />
+          </SceneItem>
+
+          <SceneItem
+            x={1500}
+            y={90}
+            w={350}
+            rotate={-10}
+            delay={200}
+            visible={visible}
+            label="one of my ❤️"
+            labelPos="bottom"
+            labelRotate={-8}
+          >
+            <Image
+              width={300}
+              height={500}
+              className="w-full h-auto"
+              alt="fun-fact-note"
+              src="/Assets/FunFact/wall-poster-2.png"
+            />
+          </SceneItem>
+
+          {/* -------- bottom row: mug, bug-fix, console.log, butterfly/flowers -------- */}
+          <SceneItem x={1000} y={550} w={100} delay={260} visible={visible}>
+            <CoffeeToggle visible={visible} />
+          </SceneItem>
+
+          <SceneItem
+            x={440}
+            y={610}
+            w={250}
+            rotate={-2}
+            delay={320}
+            visible={visible}
+            label="works on my machine"
+            labelPos="right"
+            labelRotate={-2}
+          >
+            <Image
+              width={220}
+              height={500}
+              className="w-full h-auto"
+              alt="fun-fact-note"
+              src="/Assets/FunFact/bug-fix.png"
+            />
+          </SceneItem>
+
+          <SceneItem
+            x={200}
+            y={470}
+            w={200}
+            delay={380}
+            visible={visible}
+            label="9999+ Bugs Fixed"
+            labelPos="bottom"
+            labelRotate={2}
+          >
+            <Image
+              width={320}
+              height={500}
+              className="w-full h-auto"
+              alt="fun-fact-note"
+              src="/Assets/FunFact/console-log-1.png"
+            />
+          </SceneItem>
+
+          <SceneItem
+            x={1400}
+            y={620}
+            w={200}
+            delay={440}
+            visible={visible}
+            label=""
+            labelPos="bottom"
+            labelRotate={1.5}
+          >
+            <div className="relative">
+              <Image
+                width={70}
+                height={500}
+                className="absolute z-10 -top-10 -right-10 w-[35%] h-auto butterfly-wiggle"
+                alt="butterfly"
+                src="/Assets/FunFact/butter-fly.png"
+              />
+              <Image
+                width={200}
+                height={500}
+                className="w-full h-auto -rotate-6"
+                alt="flower pot"
+                src="/Assets/FunFact/flower-pot.png"
+              />
+            </div>
+          </SceneItem>
+        </ScaledScene>
+
         <div
-          key={note.src}
-          className="absolute left-1/2 top-1/2 will-change-transform transition-all ease-out"
+          className="absolute z-20 will-change-transform transition-all ease-out"
           style={{
-            transitionDuration: "900ms",
-            transitionDelay: `${i * 120}ms`,
+            left: "50%",
+            top: "36%",
+            transitionDuration: "700ms",
             transform: visible
-              ? `translate(-50%, -50%) translate(${note.x}vw, ${note.y}vh) rotate(${note.rotate}deg) scale(1)`
-              : `translate(-50%, -50%) translate(${note.x}vw, ${note.y + 40}vh) rotate(${note.rotate + (i % 2 === 0 ? 14 : -14)}deg) scale(0.85)`,
+              ? "translate(-50%, -50%) scale(1.15)"
+              : "translate(-50%, -50%) scale(0.6)",
             opacity: visible ? 1 : 0,
           }}
         >
-          <Image width={note.width} height={200} alt="fun-fact-note" src={note.src} />
+          <div className="relative text-center py-10 overflow-hidden">
+            <h1 className="relative z-10 bree-serif-regular text-[4vw] text-[#0c0c0c] p-[30px]">
+              Fun Fact
+            </h1>
+          </div>
         </div>
-      ))}
+      </div>
 
-      <div
-        className="absolute left-1/2 top-1/2 z-20 will-change-transform transition-all ease-out"
-        style={{
-          transitionDuration: "700ms",
-          transform: visible
-            ? "translate(-50%, -50%) scale(1.15)"
-            : "translate(-50%, -50%) scale(0.6)",
-          opacity: visible ? 1 : 0,
-        }}
-      >
-<div className="relative  text-center py-30 overflow-hidden">
-          <h1 className="relative z-10 bree-serif-regular text-[4vw] my-[4vw] text-[#0c0c0c] p-[30px]">
-                  Fun Fact
-          </h1>
-        </div>      </div>
-
-      
-    </div>
-    <div className="mt-[30px]">
+      <div className="mt-[30px]">
         <SkillsMarquee />
       </div>
- 
-
-      
-
-      
-
-
-          
     </div>
   );
 }

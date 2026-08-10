@@ -144,6 +144,9 @@ function ProjectCard({ project, index }) {
     return (
       <div className="bg-[#0c0c0c]">
         {/* Hero — unchanged, stays on top */}
+
+
+           
         <div className="relative  text-center py-30 overflow-hidden">
           <h1 className="relative z-10 bree-serif-regular text-[4vw] my-[4vw] text-[#C4C4C4] p-[30px]">
                   Built From Scratch | Time Go Fishing
