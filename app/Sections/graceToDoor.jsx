@@ -139,7 +139,6 @@ export default function graceToDoor() {
   const astronautAnchorRef = useRef(null);
   const doorAnchorRef = useRef(null);
   const doorGlowRef = useRef(null);
-  const thrusterRef = useRef(null);
   const starsWrapRef = useRef(null);
 
   const [ropePath, setRopePath] = useState("");
@@ -233,6 +232,11 @@ export default function graceToDoor() {
     const start = performance.now();
 
     const tick = (now) => {
+
+      if (!isVisibleRef.current) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
       const time = (now - start) / 1000;
       const target = targetProgressRef.current;
       const current = smoothProgressRef.current;
@@ -242,7 +246,6 @@ export default function graceToDoor() {
       smoothProgressRef.current = Math.abs(next - target) < 0.0001 ? target : next;
       const p = smoothProgressRef.current;
 
-      // velocity drives motion blur + thruster intensity
       const translateX = maxTranslateRef.current * p;
       const velocity = Math.abs(translateX - prevXRef.current);
       prevXRef.current = translateX;
@@ -255,16 +258,8 @@ export default function graceToDoor() {
         astronautWrapRef.current.style.transform = `translate(${translateX}px, ${translateY}px) rotate(${rotate}deg)`;
       }
      
-      if (thrusterRef.current) {
-        const intensity = Math.min(velocity / 6, 1);
-        thrusterRef.current.style.opacity = String(0.15 + intensity * 0.85);
-        thrusterRef.current.style.transform = `scaleX(${0.6 + intensity * 0.8})`;
-      }
-      if (doorGlowRef.current) {
-        const glow = 0.25 + p * 0.75;
-        doorGlowRef.current.style.opacity = String(glow);
-        doorGlowRef.current.style.transform = `scale(${1 + p * 0.35})`;
-      }
+      
+      
       if (containerRef.current) {
         // slow cinematic push-in over the whole scroll
         containerRef.current.style.transform = `scale(${1 + p * 0.045})`;
@@ -289,6 +284,28 @@ export default function graceToDoor() {
     return () => cancelAnimationFrame(rafRef.current);
   }, [updateRope]);
 
+
+  const isVisibleRef = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      },
+      {
+        threshold: 0.1,
+      }
+    );
+  
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+  
+    return () => observer.disconnect();
+  }, []);
+
+
+
   return (
     <>
       <section
@@ -296,10 +313,13 @@ export default function graceToDoor() {
         className="relative w-full py-[6%] h-auto overflow-hidden"
         style={{
           backgroundColor: "rgb(12, 12, 12)",
-          backgroundImage: "radial-gradient(circle,rgba(49, 49, 49, 0.64) 1px, transparent 0.5px)",
-          backgroundSize: "18px 18px",
+            
         }}
       >
+
+        
+
+        
 
         
         <div ref={starsWrapRef} className="absolute inset-0 will-change-transform">
@@ -386,18 +406,7 @@ export default function graceToDoor() {
               />
             </div>
 
-            {/* thruster puff near the boots, intensity tied to velocity */}
-            <div
-              ref={thrusterRef}
-              className="absolute thruster-glow"
-              style={{
-                left: "18%",
-                bottom: "8%",
-                width: 46,
-                height: 20,
-                opacity: 0.15,
-              }}
-            />
+           
 
             <span
               ref={astronautAnchorRef}
@@ -408,16 +417,7 @@ export default function graceToDoor() {
 
           {/* ---- Shuttle door ---- */}
           <div className="absolute right-[0%]">
-            <div
-              ref={doorGlowRef}
-              className="absolute door-glow"
-              style={{
-                left: "0%",
-                top: "20%",
-                width: 160,
-                height: 160,
-              }}
-            />
+            
             <Image
               width={400}
               height={200}
@@ -451,28 +451,9 @@ export default function graceToDoor() {
             }
           }
 
-          .thruster-glow {
-            background: radial-gradient(
-              ellipse at center,
-              rgba(255, 200, 140, 0.9) 0%,
-              rgba(255, 120, 60, 0.55) 40%,
-              rgba(255, 80, 40, 0) 75%
-            );
-            filter: blur(2px);
-            transition: opacity 0.15s ease-out;
-          }
+         
 
-          .door-glow {
-            border-radius: 9999px;
-            background: radial-gradient(
-              circle,
-              rgba(255, 190, 150, 0.55) 0%,
-              rgba(255, 120, 90, 0.28) 45%,
-              rgba(255, 80, 60, 0) 75%
-            );
-            filter: blur(10px);
-            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-          }
+          
 
           .vignette {
             

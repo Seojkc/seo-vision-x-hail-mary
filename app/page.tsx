@@ -4,6 +4,7 @@ import Introduction from './Sections/Introduction';
 import GraceToDoor from './Sections/graceToDoor';
 import  Funfacts from './Sections/funFacts';
 import Skills from './Sections/Skills';
+import Projects from './Sections/Projects';
 
 export default function Home() {
   return (
@@ -13,10 +14,15 @@ export default function Home() {
       <Introduction/>
 
       <GraceToDoor/>
+
+      <Projects/>
       
-      <Funfacts/>
+      
 
       <Skills/>
+      <Funfacts/>
+
+      
       
       <Theory/>
 

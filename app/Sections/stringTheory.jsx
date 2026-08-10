@@ -5,7 +5,7 @@ import Image from "next/image";
 import TypingSequence from "../Components/Typingsequence";
 
 // Config for the net effect — tweak freely
-const SPACING = 70;
+const SPACING = 98;
 const RADIUS = 160;
 const PULL_STRENGTH = 0.85;
 const EASE = 0.12;
@@ -402,6 +402,9 @@ export default function Introduction() {
     <>
       <div ref={boundaryRef} className="relative h-[70rem] overflow-hidden ">
         <NetBackground attractors={attractors} />
+
+        <p className="text-[#218a13] absolute mt-30 ml-10 pointer-events-none font-section-underline">_// Section Last : Gravitational pull playground //_</p>
+
 
         <div className="relative z-10 pointer-events-none h-full">
           {/* main draggable ship — higher z-index so the follower sits under it */}

@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useState,useRef,useEffect } from "react";
+import PetrovaLines from "../Components/PetrovaLines";
+
 
 function MusicPlayer(props) {
   
@@ -82,7 +84,7 @@ export default function Introduction()
 
   useEffect(
     ()=>{
-      const interval = setInterval(()=>{ setWordChange((prep)=>!prep)},1000);
+      const interval = setInterval(()=>{ setWordChange((prep)=>!prep)},1500);
 
       return () => clearInterval(interval);
     },[]);
@@ -95,13 +97,46 @@ export default function Introduction()
         className="relative w-full h-auto overflow-hidden border-top-cardboard"
         style={{
             backgroundColor: "rgb(12, 12, 12)",
-            backgroundImage: "radial-gradient(circle,rgba(49, 49, 49, 0.64) 1px, transparent 0.5px)",
-            backgroundSize: "18px 18px",
+            backgroundImage: `
+              linear-gradient(to right, rgba(200, 200, 200, 0.05) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(200, 200, 200, 0.05) 1px, transparent 1px)
+            `,
+            backgroundSize: "98px 98px",
         }}
         >
+          <div className="relative z-10 text-[#218a13]">
+            <PetrovaLines lineCount={8} starCount={40} />
+          </div>
 
-            <p className="text-[#218a13]  mt-30 ml-10  font-section-underline">_// Section One : Introduction //_</p>
-            <div className="flex justify-evenly mb-[100px]">
+           <div className="pointer-events-none absolute inset-0 z-0">
+            <div
+              className="absolute inset-x-0 top-0 h-400"
+              style={{ background: "linear-gradient(to bottom,rgb(12, 12, 12), transparent 30%)" }}
+            />
+            <div
+              className="absolute inset-x-0 top-0 h-400"
+              style={{ background: "linear-gradient(to right,rgb(12, 12, 12), transparent 30%)" }}
+            />
+            <div
+              className="absolute inset-x-0 top-0 h-400"
+              style={{ background: "linear-gradient(to left,rgb(12, 12, 12), transparent 30%)" }}
+            />
+          </div>
+
+          <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-300 "
+          style={{
+            background: "linear-gradient(to top,rgb(12, 12, 12), transparent 30%)",
+          }}
+        />
+
+          
+
+
+            <p className="relative z-10 text-[#218a13] mt-23 ml-10 font-section-underline">
+            _// Section One : Introduction //_
+              </p>            
+              <div className="relative z-10 flex justify-evenly mb-[100px]">
                 <div>
                     <Image
                         src="/Assets/bug-1.png"
@@ -142,12 +177,12 @@ export default function Introduction()
                     </div>
                 <div className="text-[#C4C4C4]">
                     
-                <h3 className="text-4xl mt-[30%] russo-one-regular w-[900px] text-center">
+                <h3 className="text-4xl mt-[30%] bree-serif-regular  w-[900px] text-center">
                   Hi, I'm <span className="text-6xl">Seo James</span>, a passionate
 
                   <span className="inline-flex perspective align-middle mx-2">
                     <span
-                      className="relative inline-block w-[220px] h-[60px] preserve-3d transition-transform duration-700"
+                      className="relative inline-block w-[220px]  preserve-3d transition-transform duration-700"
                       style={{
                         transform: wordChange ? "rotateX(180deg)" : "rotateX(0deg)",
                       }}
@@ -176,8 +211,9 @@ export default function Introduction()
                     </span>
                   </span>
 
-                  who creates innovative digital experiences by blending thoughtful design, modern technology, and creative problem-solving to build products that inspire, engage, and leave a lasting impact.
-                </h3>
+                   who builds things with purpose, curiosity, and a love for making ideas real.
+                  
+                  </h3>
                 </div>
                 <div>
                     <MusicPlayer className="mt-[80%]" />
