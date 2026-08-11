@@ -5,6 +5,8 @@ import GraceToDoor from './Sections/graceToDoor';
 import  Funfacts from './Sections/funFacts';
 import Skills from './Sections/Skills';
 import Projects from './Sections/Projects';
+import GithubSection from './Sections/github';
+
 
 export default function Home() {
   return (
@@ -21,7 +23,7 @@ export default function Home() {
 
       <Skills/>
       <Funfacts/>
-
+      <GithubSection/>
       
       
       <Theory/>

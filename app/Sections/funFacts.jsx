@@ -353,7 +353,7 @@ export default function FunFacts() {
 
   return (
     <div
-      className="relative w-full"
+      className="relative w-full pb-[20vh]"
       style={{
         backgroundColor: "#f5f5f5",
         backgroundImage: `
@@ -377,7 +377,7 @@ export default function FunFacts() {
       />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
-        style={{ background: "linear-gradient(to top,#F2F0EF, transparent 10%, transparent)" }}
+        style={{ background: "linear-gradient(to top,#F2F0EF, transparent 80%, transparent)" }}
       />
 
       <p className="absolute text-[#218a13] font-section-underline top-[4%] left-[3%]">
@@ -556,7 +556,7 @@ export default function FunFacts() {
         </div>
       </div>
 
-      <div className="mt-[30px]">
+      <div className="mt-[120px]">
         <SkillsMarquee />
       </div>
     </div>
