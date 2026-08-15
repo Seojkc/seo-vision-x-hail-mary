@@ -3,41 +3,26 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-// ---- Each card is fully self-described ----
-// Shared fields (every card needs these):
+// ---- Every card is the same shape now ----
+//   image     -> background image src
+//   heading   -> always shown
+//   subheading-> revealed on hover, when the heading nudges up
 //   x, y      -> center position, ratio of container width/height
 //   w         -> width, ratio of container width
 //   rotate    -> degrees
-//   variant   -> "image" | "color"
-//
-// variant: "image"
-//   image        -> src path
-//   url          -> link (optional, defaults "#")
-//   heading      -> optional overlay title
-//   subheading   -> optional overlay subtitle, shown under heading
-//
-// variant: "color"
-//   bg           -> tailwind bg class OR hex (use bgColor for hex)
-//   bgColor      -> optional raw hex/rgb, overrides `bg`
-//   heading      -> optional label text
-//   subheading   -> optional label subtext
-//   textColor    -> tailwind text class, default "text-white"
 
 const cards = [
   {
-    variant: "image",
-    image: "/repos/repo-01.png",
-    url: "#",
-    heading: "design-system",
+    image: "/Assets/projects/project-1111.png",
+    heading: "Money Compass",
+    subheading: "Next.js · Tailwind",
     x: 0.13,
     y: 0.27,
     w: 0.2,
     rotate: -10,
   },
   {
-    variant: "image",
     image: "/repos/repo-02.png",
-    url: "#",
     heading: "portfolio-site",
     subheading: "Next.js · Tailwind",
     x: 0.38,
@@ -46,67 +31,72 @@ const cards = [
     rotate: 0,
   },
   {
-    variant: "color",
-    bg: "bg-[#aba1c2]",
+    image: "/repos/repo-03.png",
     heading: "main-dashboard",
+    subheading: "React · Node",
     x: 0.59,
     y: 0.29,
     w: 0.16,
     rotate: 10,
   },
   {
-    variant: "color",
-    bg: "bg-[#aba1c2]",
+    image: "/repos/repo-04.png",
+    heading: "flagship-app",
+    subheading: "React Native",
     x: 0.8,
     y: 0.41,
     w: 0.14,
     rotate: 35,
   },
   {
-    variant: "color",
-    bg: "bg-[#9684bd]",
+    image: "/repos/repo-05.png",
+    heading: "cli-toolkit",
+    subheading: "Go",
     x: 0.91,
     y: 0.62,
     w: 0.09,
     rotate: 60,
   },
   {
-    variant: "color",
-    bg: "bg-[#785cb8]",
-    textColor: "text-black",
+    image: "/repos/repo-06.png",
+    heading: "api-wrapper",
+    subheading: "TypeScript",
     x: 0.94,
     y: 0.8,
     w: 0.075,
     rotate: 90,
   },
-  
   {
-    variant: "color",
-    bg: "bg-[#6c4cb5]",
+    image: "/repos/repo-07.png",
+    heading: "auth-service",
+    subheading: "Node",
     x: 0.87,
     y: 0.934,
     w: 0.07,
     rotate: 150,
   },
   {
-    variant: "color",
-    bg: "bg-[#5c38b0]",
+    image: "/repos/repo-08.png",
+    heading: "data-pipeline",
+    subheading: "Python",
     x: 0.75,
     y: 0.96,
     w: 0.06,
     rotate: 180,
   },
   {
-    variant: "color",
-    bg: "bg-[#4e26ab]",
+    image: "/repos/repo-09.png",
+    heading: "micro-utils",
+    subheading: "TypeScript",
     x: 0.67,
     y: 0.89,
     w: 0.04,
     rotate: 235,
   },
   {
-    variant: "color",
-    bg: "bg-[#3a0ca3]",
+    image: "/repos/repo-10.png",
+    heading: "ui-components",
+    subheading: "React",
     x: 0.66,
     y: 0.8,
     w: 0.035,
@@ -120,33 +110,57 @@ const DOT_Y_RATIO = 0.8;
 
 const CARD_ASPECT = 1.3; // height = width * this
 
-function CardContent({ card }) {
-  if (card.variant === "color") {
-    return (
-      <div
-        className={`relative w-full h-full flex flex-col items-center justify-center text-center p-2 ${card.bg ?? ""} ${card.textColor ?? "text-white"}`}
-        style={card.bgColor ? { backgroundColor: card.bgColor } : undefined}
-      >
-        {card.heading && (
-          <span className="text-sm font-semibold leading-tight">{card.heading}</span>
-        )}
-        {card.subheading && (
-          <span className="text-xs opacity-80 mt-1">{card.subheading}</span>
-        )}
-      </div>
-    );
-  }
+// font size scales with the card's actual rendered width (px), clamped so
+// the biggest cards stay readable and the smallest cards don't overflow
+function headingFontSize(cardPxWidth) {
+  return Math.max(9, Math.min(20, cardPxWidth * 0.11));
+}
+function subheadingFontSize(cardPxWidth) {
+  return Math.max(7, Math.min(13, cardPxWidth * 0.075));
+}
 
-  // variant === "image"
+function CardContent({ card, cardPxWidth }) {
+  const fontSize = headingFontSize(cardPxWidth)*1.7;
+  const subFontSize = subheadingFontSize(cardPxWidth);
+
   return (
-    <div className="relative w-full h-full">
-      <Image src={card.image} alt={card.heading ?? "repo"} fill sizes="20vw" className="object-cover" />
-      {(card.heading || card.subheading) && (
-        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-sm p-2">
-          {card.heading && <div className="font-semibold leading-tight">{card.heading}</div>}
-          {card.subheading && <div className="text-xs opacity-80 mt-0.5">{card.subheading}</div>}
+    <div className="relative w-full h-full bg-[#002e78]">
+      <Image
+        src={card.image}
+        alt={card.heading}
+        fill
+        sizes="20vw"
+        className="object-cover"
+      />
+
+      {/* bottom text panel -- heading always visible, subheading revealed on hover */}
+      <div className="absolute bottom-0 left-0 right-0  px-5 py-10">
+        <h3
+          className="  transition-transform duration-300 ease-out group-hover:-translate-y-0.5"
+          style={{ fontSize }}
+        >
+          {card.heading}
+        </h3>
+
+        <div
+          className="grid transition-[grid-template-rows] duration-300 ease-out"
+          style={{ gridTemplateRows: "0fr" }}
+        >
+          <style jsx>{`
+            .group:hover & {
+              grid-template-rows: 1fr;
+            }
+          `}</style>
+          <div className="overflow-hidden">
+            <p
+              className="text-white/80 leading-tight pt-0.5"
+              style={{ fontSize: subFontSize }}
+            >
+              {card.subheading}
+            </p>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -246,17 +260,10 @@ export default function GithubSection() {
               const left = width * card.x;
               const top = height * card.y;
 
-              const Wrapper = card.variant === "image" ? "a" : "div";
-              const wrapperProps =
-                card.variant === "image"
-                  ? { href: card.url ?? "#", target: "_blank", rel: "noopener noreferrer" }
-                  : {};
-
               return (
-                <Wrapper
+                <div
                   key={i}
-                  {...wrapperProps}
-                  className="absolute rounded-xl border border-black/10 shadow-md overflow-hidden transition-transform duration-300"
+                  className="group absolute rounded-xl border border-black/10 shadow-md overflow-hidden transition-transform duration-300"
                   style={{
                     left,
                     top,
@@ -266,8 +273,8 @@ export default function GithubSection() {
                     zIndex: 10 + i,
                   }}
                 >
-                  <CardContent card={card} />
-                </Wrapper>
+                  <CardContent card={card} cardPxWidth={w} />
+                </div>
               );
             })}
           </>

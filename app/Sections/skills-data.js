@@ -1,18 +1,21 @@
-export const skills = [
-  { name: "React", logo: "/Assets/react-logo.png" },
-  { name: "React Native", logo: "/Assets/react-native.png" },
-  { name: "Tailwind CSS", logo: "/Assets/tailwind-css.png" },
-  { name: "HTML", logo: "/Assets/html.png" },
-  { name: "CSS", logo: "/Assets/css.png" },
-  { name: "JavaScript", logo: "/Assets/javascript.png" },
-  { name: "TypeScript", logo: "/Assets/typescript-1.png" },
-  { name: "Git", logo: "/Assets/git.png" },
-  { name: "BitBucket", logo: "/Assets/bitbucket.png" },
-  { name: "Python", logo: "/Assets/python.png" },
-  { name: "ASP.NET", logo: "/Assets/net.png" },
-  { name: "MySQL", logo: "/Assets/mysql.png" },
-  { name: "SQL", logo: "/Assets/sql.png" },
+export const skillCategories = [
+  {
+    title: "Frontend",
+    skills: ["React","React Native","Next.js","TypeScript","JavaScript","HTML","CSS","Tailwind CSS",],
+  },
+  {
+    title: "Backend",
+    skills: [ "Python","ASP.NET","MySQL","SQL","REST APIs",],
+  },
+  {
+    title: "Design",
+    skills: ["Framer", "UI / UX", "Motion Design"],
+  },
+  {
+    title: "Tools",
+    skills: ["Git", "Docker", "Vercel", "Bit Bucket"],
+  },
 ];
    
-  export default skills;
+  export default skillCategories;
    

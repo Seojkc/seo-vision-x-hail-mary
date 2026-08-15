@@ -353,7 +353,7 @@ export default function FunFacts() {
 
   return (
     <div
-      className="relative w-full pb-[20vh]"
+      className="relative w-full pb-[20vh] pt-[30vh]"
       style={{
         backgroundColor: "#f5f5f5",
         backgroundImage: `
@@ -365,7 +365,7 @@ export default function FunFacts() {
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
-        style={{ background: "linear-gradient(to bottom,#F2F0EF, transparent 40%)" }}
+        style={{ background: "linear-gradient(to bottom,#F2F0EF, transparent 50%)" }}
       />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
@@ -380,9 +380,7 @@ export default function FunFacts() {
         style={{ background: "linear-gradient(to top,#F2F0EF, transparent 80%, transparent)" }}
       />
 
-      <p className="absolute text-[#218a13] font-section-underline top-[4%] left-[3%]">
-        _// Section : Fun facts //_
-      </p>
+      
 
       <div ref={wrapperRef} className="relative w-full">
         <ScaledScene visible={visible}>

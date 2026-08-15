@@ -11,7 +11,7 @@ const PROJECTS = [
     tags: ["React","Python", "TypeScript","Postgres","Tailwind CSS"],
     status: "live", // "live" | "archived"
     href: "https://money-compass-navy.vercel.app/",
-    image: "/Assets/projects/project-111.png",
+    image: "/Assets/projects/project-1111.png",
   },
   {
     code: "02",
@@ -20,7 +20,7 @@ const PROJECTS = [
     tags: ["React Native", "Kotlin", "Ruby", "Swift", "Python"],
     status: "live",
     href: "https://github.com/Seojkc/GPSAlarmApp",
-    image: "/Assets/projects/project-2222.png",
+    image: "/Assets/projects/project-22222.png",
   },
 ];
 
@@ -65,8 +65,8 @@ function ProjectCard({ project, index }) {
     >
       <Image
         alt={project.title}
-        width={500}
-        height={500}
+        width={1080}
+        height={1080}
         className="w-full md:w-[30%] h-auto z-24 p-5"
         src={project.image}
       />
@@ -142,7 +142,7 @@ function ProjectCard({ project, index }) {
   );
 }export default function Projects() {
     return (
-      <div className="bg-[#0c0c0c]">
+      <div className="bg-[#0c0c0c] pb-[10vh]">
         {/* Hero — unchanged, stays on top */}
 
 
@@ -192,7 +192,7 @@ function ProjectCard({ project, index }) {
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-full "
             style={{
-              background: "linear-gradient(to top,#0c0c0c, transparent 30%, transparent)",
+              background: "linear-gradient(to top,#0c0c0c, transparent 50%, transparent)",
             }}
           />
            <div

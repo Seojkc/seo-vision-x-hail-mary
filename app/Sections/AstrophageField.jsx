@@ -18,14 +18,15 @@ export default function AstrophageField({ active, particleCount = 700 }) {
     }
 
     function makeParticle(spawnAnywhereInDepth) {
-      // ~5% are "hero" particles: they grow dramatically as they approach,
-      // matching the big looming shapes in the reference shot. Everything
-      // else stays a small, distant glint.
-      const isHero = Math.random() < 0.05;
+      // ~2% are "hero" particles: they grow a bit more as they approach,
+      // matching the big looming shapes in the reference shot -- kept
+      // small overall now so nothing balloons into a dominant blob.
+      // Everything else stays a small, distant glint.
+      const isHero = Math.random() < 0.02;
       const isBokeh = isHero || Math.random() < 0.14;
       // a subset get a visible specular sparkle flare at peak twinkle —
       // like light catching a water droplet face-on
-      const hasFlare = isHero || Math.random() < 0.22;
+      const hasFlare = isHero || Math.random() < 0.12;
 
       return {
         x: Math.random(), // normalized 0..1, recentered on projection
@@ -35,10 +36,10 @@ export default function AstrophageField({ active, particleCount = 700 }) {
         driftX: rand(-1, 1) * 0.00035,
         driftY: rand(-1, 1) * 0.00035,
         maxSizeFrac: isHero
-          ? 0.5
+          ? rand(0.09, 0.14)
           : isBokeh
-          ? rand(0.02, 0.05)
-          : rand(0.01, 0.018),
+          ? rand(0.012, 0.026)
+          : rand(0.006, 0.01),
         twinkleSpeed: 1.2,
         twinklePhase: Math.random() * Math.PI * 2,
         bokeh: isBokeh,
@@ -137,8 +138,7 @@ export default function AstrophageField({ active, particleCount = 700 }) {
         h / 2,
         Math.max(w, h) * 0.42
       );
-      ambient.addColorStop(0, "rgba(255, 0, 21, 0.39)");
-      ambient.addColorStop(1, "rgba(140, 20, 15, 0)");
+      
       ctx.fillStyle = ambient;
       ctx.fillRect(0, 0, w, h);
 
@@ -179,7 +179,7 @@ export default function AstrophageField({ active, particleCount = 700 }) {
           continue;
         }
 
-        const radius = Math.max(0.6, p.maxSizeFrac * minDim * (0.08 + persp));
+        const radius = Math.max(0.6, p.maxSizeFrac * minDim * (0.04 + persp));
 
         // fade in as it arrives from the distance, fade out just before
         // it "passes" the camera
