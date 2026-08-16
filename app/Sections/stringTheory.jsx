@@ -403,7 +403,6 @@ export default function Introduction() {
       <div ref={boundaryRef} className="relative h-[70rem] overflow-hidden ">
         <NetBackground attractors={attractors} />
 
-        <p className="text-[#218a13] absolute mt-30 ml-10 pointer-events-none font-section-underline">_// Section Last : Gravitational pull playground //_</p>
 
 
         <div className="relative z-10 pointer-events-none h-full">

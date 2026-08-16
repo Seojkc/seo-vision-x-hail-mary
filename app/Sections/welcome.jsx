@@ -186,7 +186,7 @@ export default function Welcome() {
                 className="absolute inset-0 h-full w-full object-cover opacity-90"
                 />
 
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/90" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/90" />
 
             {/* SVG mask: a soft-edged organic blob that morphs with mouse movement */}
             <svg width="0" height="0" style={{ position: "absolute" }}>

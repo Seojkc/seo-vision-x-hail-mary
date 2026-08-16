@@ -149,7 +149,7 @@ function ProjectCard({ project, index }) {
            
         <div className="relative  text-center py-30 overflow-hidden">
           <h1 className="relative z-10 bree-serif-regular text-[4vw] my-[4vw] text-[#C4C4C4] p-[30px]">
-                  Built From Scratch | Time Go Fishing
+                  Built From  <span className="text-[#ff0000]">Scratch</span>   | Time Go Fishing
           </h1>
         </div>
 

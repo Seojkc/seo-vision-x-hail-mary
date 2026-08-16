@@ -28,7 +28,7 @@ export default function Skills() {
       <div className="h-[100vh] relative bg-[#0c0c0c] ">
         <div className="h-[50%] bg-[#0c0c0c]">
           <h1 className="text-[20vh] h-full text-[#F2F0EF] bree-serif-regular pl-[3%] flex items-end self-end">
-            Skills
+            Skill <span className="text-[#ff0000]">s</span> 
           </h1>
         </div>
 

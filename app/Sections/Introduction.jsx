@@ -281,7 +281,7 @@ export default function Introduction() {
 
         <div className="text-[#C4C4C4] items-center flex justify-center mb-[20%]">
           <h3 className="text-4xl mt-[20%] bree-serif-regular  w-[900px] text-center">
-            Hi, I'm <span className="text-6xl">Seo James</span>, a passionate
+            Hi, I'm <span className="text-6xl text-[#ff0000]">Seo James</span>, a passionate
             <span className="inline-flex perspective align-middle mx-2">
               <span
                 className="relative inline-block w-[220px]  preserve-3d transition-transform duration-700"
