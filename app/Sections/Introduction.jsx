@@ -416,7 +416,7 @@ export default function Introduction() {
 
               {/* BOTTOM CARD */}
               <MusicCard
-                src="/Assets/glorious-purpose.mp3"
+                src="/Assets/mp3/glorious-purpose.mp3"
                 bgImage="/Assets/mp3/glorious-purpose-cover.png"
                 heading="Purpose is Glorious"
                 currentSong={currentSong}

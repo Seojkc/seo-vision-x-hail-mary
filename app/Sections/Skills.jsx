@@ -17,7 +17,7 @@ const PARTICLE_FADE_MASK =
   "radial-gradient(circle at center, black 30%, transparent 72%)";
 
 
-const BGSRC = ["/Assets/flowers-skills.png","/Assets/flowers-skills.png","/Assets/flowers-skills.png","/Assets/flowers-skills.png"];
+const BGSRC = ["/Assets/comets-skills.png","/Assets/birds-skills.png","/Assets/flowers-skills.png","/Assets/fishs-skills.png"];
 
 export default function Skills() {
   // drives the particle glow around the planet -- true while any category row is hovered
@@ -88,7 +88,7 @@ export default function Skills() {
                       backgroundPosition: "left bottom",
                       backgroundSize: "auto 100%",
                       maskImage:
-                        "linear-gradient(to right, transparent 0%, black 30%, transparent 70%)",
+                        "linear-gradient(to right, transparent 0%, black 30%,black 40%, transparent 80%)",
                       WebkitMaskImage:
                         "linear-gradient(to right, transparent 0%, black 40%, transparent 70%)",
                     }}
