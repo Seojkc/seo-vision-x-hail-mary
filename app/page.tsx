@@ -10,7 +10,7 @@ import GithubSection from './Sections/github';
 
 export default function Home() {
   return (
-    <div>
+    <div className='overflow-x-hidden gabriela-regular'>
       
       <Welcome />
       <Introduction/>

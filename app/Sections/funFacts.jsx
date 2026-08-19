@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import useScrollReveal from "../Components/useScrollReveal"
 
 /* =========================================================================
    Skills marquee (unchanged from your original)
@@ -66,7 +67,7 @@ function SkillsMarquee() {
           >
             {loopItems.map((skill, i) => (
               <span key={i} className="mx-8 flex items-center flex-shrink-0">
-                <span className="text-[#0c0c0c] bree-serif-regular text-6xl md:text-6xl font-black tracking-tight">
+                <span className="text-[#0c0c0c]  text-6xl md:text-6xl font-black tracking-tight">
                   {skill}
                 </span>
               </span>
@@ -332,6 +333,7 @@ export function CoffeeToggle({ visible = true }) {
 export default function FunFacts() {
   const wrapperRef = useRef(null);
   const [visible, setVisible] = useState(false);
+  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -365,7 +367,7 @@ export default function FunFacts() {
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
-        style={{ background: "linear-gradient(to bottom,#F2F0EF, transparent 50%)" }}
+        style={{ background: "linear-gradient(to bottom,#F2F0EF, transparent 20%)" }}
       />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
@@ -377,7 +379,7 @@ export default function FunFacts() {
       />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
-        style={{ background: "linear-gradient(to top,#F2F0EF, transparent 80%, transparent)" }}
+        style={{ background: "linear-gradient(to top,#F2F0EF, transparent 30%, transparent)" }}
       />
 
       
@@ -547,7 +549,8 @@ export default function FunFacts() {
           }}
         >
           <div className="relative text-center py-10 overflow-hidden">
-            <h1 className="relative z-10 bree-serif-regular text-[4vw] text-[#0c0c0c] p-[30px]">
+            <h1 ref={headingRef}
+    className={`reveal-wipe ${headingVisible ? "is-visible" : ""}  invert relative z-10 text-[4vw] text-[#0c0c0c] p-[30px]`}>
               Fun Fact
             </h1>
           </div>

@@ -27,7 +27,7 @@ export default function Skills() {
     <>
       <div className="h-[100vh] relative bg-[#0c0c0c] ">
         <div className="h-[50%] bg-[#0c0c0c]">
-          <h1 className="text-[20vh] h-full text-[#F2F0EF] bree-serif-regular pl-[3%] flex items-end self-end">
+          <h1 className="text-[20vh] h-full text-[#F2F0EF]  pl-[3%] flex items-end self-end">
             Skill <span className="text-[#ff0000]">s</span> 
           </h1>
         </div>
@@ -103,7 +103,7 @@ export default function Skills() {
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <h3
-                        className="text-[3vh] bree-serif-regular text-[#0c0c0c] tracking-tight origin-left transition-transform duration-500 group-hover:translate-x-2 group-hover:scale-125"
+                        className="text-[3vh] font-bold text-[#0c0c0c] tracking-tight origin-left transition-transform duration-500 group-hover:translate-x-2 group-hover:scale-125"
                         style={{ transitionTimingFunction: SPRING_EASE }}
                       >
                         {cat.title}

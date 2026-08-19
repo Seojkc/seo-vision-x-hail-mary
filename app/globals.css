@@ -4,6 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cookie&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gabriela&display=swap');
 
 
 @import "tailwindcss";
@@ -31,6 +32,12 @@
   line-height: 1.4;
 
 }
+
+
+.gabriela-regular {
+  font-family: "Gabriela", serif;
+}
+
 
 .old-standard-tt-regular {
   font-family: "Old Standard TT", serif;
@@ -373,5 +380,61 @@ body {
 
   to {
     transform: rotate(360deg);
+  }
+}
+
+
+.reveal-wipe {
+  will-change: mask-position, -webkit-mask-position, background-position;
+  padding-bottom: 15px;
+  /* ---- COLOR layer: white behind the edge, rainbow AT the edge, doesn't matter past it (masked out) ---- */
+  background-image: linear-gradient(
+    120deg,
+    #ffffff 0%,
+    #ffffff  33%,
+    #dd5634 40%, 
+    #f33434 45%,
+    #f06cc4 50%,
+    #b4446f 55%,
+    #8d0230 60%, 
+       transparent 66.67%, transparent
+  );
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+
+
+  -webkit-mask-size: 200% 100%;
+  mask-size: 200% 100%;
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  /* both properties animate with IDENTICAL duration/easing/delay so they stay synced */
+  transition:
+    -webkit-mask-position var(--reveal-duration, 3.4s) var(--reveal-easing, cubic-bezier(0.22, 1, 0.36, 1)) var(--reveal-delay, 0s),
+    mask-position var(--reveal-duration, 3.4s) var(--reveal-easing, cubic-bezier(0.22, 1, 0.36, 1)) var(--reveal-delay, 0s),
+    background-position var(--reveal-duration, 3.4s) var(--reveal-easing, cubic-bezier(0.22, 1, 0.36, 1)) var(--reveal-delay, 0s);
+}
+
+.reveal-wipe.is-visible {
+  -webkit-mask-position: 0% 0;
+  mask-position: 0% 0;
+  background-position: 0% 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-wipe {
+    -webkit-mask-image: none;
+    mask-image: none;
+    background-image: none;
+    -webkit-text-fill-color: #fff;
+    color: #fff;
+    transition: none !important;
   }
 }

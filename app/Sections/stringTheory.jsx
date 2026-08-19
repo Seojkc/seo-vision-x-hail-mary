@@ -461,13 +461,13 @@ export default function Introduction() {
             />
           </div>
 
-          <div className="absolute mt-[16vw] ml-20 z-20 agdasima-regular">
+          <div className="absolute mt-[16vw] ml-20 z-20 bree-serif-regular">
             <div className="flex align-down">
               <h1 className="  text-[10vw]   ">code</h1>
               <h1 className=" mt-26 ml-6 text-[5vw]  ">without</h1>
             </div>
-            <h1 className=" text-[15vw]  mt-[-150px] ml-[-5px]">Limits</h1>
-            <h1 className=" text-[2vw]  mt-[-80px] ml-[10px] text-red-500">
+            <h1 className=" text-[15vw]  mt-[-150px] ml-[-5px] text-[#ff0000]">Limits</h1>
+            <h1 className=" text-[2vw]  mt-[-80px] ml-[10px] ">
               Building with code, creativity, and curiosity.
             </h1>
           </div>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import useScrollReveal from "../Components/useScrollReveal"
 
 // ---- Every card is the same shape now ----
 //   heading   -> always shown
@@ -311,6 +312,11 @@ function useInView(options = { threshold: 0.3 }) {
 // interpolates between two hex colors -- used so a row of discrete blocks
 // still reads as one smooth gradient sweep from block to block
 function hexToRgb(hex) {
+
+
+  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
+
+
   const clean = hex.replace("#", "");
   const bigint = parseInt(clean, 16);
   return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
@@ -329,6 +335,9 @@ const GRADIENT_END = "#3b82f6";
 const BLOCK_HOURS = 0.5; // each block = 30 minutes
 
 function WeekInCode() {
+
+    const [headingRef, headingVisible] = useScrollReveal({threshold:1})
+
   const [ref, inView] = useInView({ threshold: 0.25 });
 
   const maxHours = Math.max(...weekData.map((d) => d.hours));
@@ -338,9 +347,10 @@ function WeekInCode() {
   const totalBlocks = Math.round(maxHours / BLOCK_HOURS);
 
   return (
-    <div ref={ref} className="absolute text-black top-[60%] left-[5%] w-[42%] bree-serif-regular">
+    <div ref={ref} className="absolute text-black top-[60%] left-[5%] w-[42%] ">
       <div className="flex items-baseline justify-between mb-8">
-        <h2 className="text-black text-[4.4vw] leading-none font-[500]">My Week in Code</h2>
+        <h2 ref={headingRef}
+    className={`reveal-wipe ${headingVisible ? "is-visible" : ""} text-black text-[4.4vw]  invert leading-none font-[800]`}>My Week in Code</h2>
       </div>
 
       <div className="flex flex-col gap-[1.3vh] pointer-events-none">
@@ -391,6 +401,9 @@ function WeekInCode() {
 
 export default function GithubSection() {
   const containerRef = useRef(null);
+  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
+
+
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -414,7 +427,7 @@ export default function GithubSection() {
       style={{
         backgroundColor: "#f5f5f5",
         backgroundImage: "radial-gradient(circle,rgba(145, 145, 145, 0.64) 1px, transparent 0.5px)",
-        backgroundSize: "24px 24px",
+        backgroundSize: "30px 30px",
     }}
     >
       <div
@@ -443,7 +456,7 @@ export default function GithubSection() {
           className="w-[600px] h-[auto] invert object-contain absolute -right-70 -top-40 opacity-50"
         />
 
-        <h1 className="relative z-10 flex items-center justify-center gap-5 bree-serif-regular text-[4vw] text-[#0c0c0c] p-[30px]">
+        <h1 className="relative z-10 flex items-center justify-center gap-5 font-bold text-[4vw] text-[#0c0c0c] p-[30px]">
           A Few From <span className="text-[#ff0000]">GitHub</span> 
         </h1>
       </div>

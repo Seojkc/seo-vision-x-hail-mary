@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import PetrovaLines from "../Components/PetrovaLines";
 import CurvedText from "../Components/CurvedText";
+import useScrollReveal from "../Components/useScrollReveal"
 
 export function MusicCard({
   src,
@@ -16,10 +17,10 @@ export function MusicCard({
   className = "",
 }) {
   const isActive = currentSong === src;
+  const isPlaying = isActive && play;
 
   const handleClick = () => {
     if (isActive) {
-      // clicking the card that's already selected just toggles play/pause
       setPlay((prev) => !prev);
     } else {
       setCurrentSong(src);
@@ -31,97 +32,164 @@ export function MusicCard({
     <div
       onClick={handleClick}
       className={`
-    absolute
-    w-[150px]
-    h-[150px]
-    rounded-[25px]
-    overflow-hidden
-    cursor-pointer
-
-    opacity-0
-    scale-0
-
-    group-hover:opacity-100
-    group-hover:scale-100
-
-    transition-all
-    duration-300
-
-    ${className}
-  `}
+        group/card
+        absolute
+        w-[150px]
+        h-[150px]
+        p-2
+        rounded-[10px]
+        overflow-hidden
+        cursor-pointer
+      
+        opacity-0
+        scale-0
+        blur-sm
+      
+        group-hover:opacity-100
+        group-hover:scale-100
+        group-hover:blur-none
+      
+        active:scale-95
+      
+        transition-[transform,opacity,filter,box-shadow]
+        duration-500
+        ease-[cubic-bezier(0.34,1.56,0.64,1)]
+      
+        ${isActive ? "scale-110 z-30" : "hover:scale-105"}
+      
+        ${className}
+      `}
       style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-
-        boxShadow: `
-      inset 8px 8px 15px rgba(0, 0, 0, 0.35),
-      inset -10px -14px 15px rgba(0, 0, 0, 0.86)
-    `,
+        boxShadow: isPlaying
+          ? `0 0 0 2px rgba(255,255,255,0.9),
+             0 0 28px 6px rgba(255,255,255,0.35),
+             inset 8px 8px 15px rgba(0,0,0,0.35),
+             inset -10px -14px 15px rgba(0,0,0,0.86)`
+          : isActive
+          ? `0 0 0 2px rgba(255,255,255,0.55),
+             inset 8px 8px 15px rgba(0,0,0,0.35),
+             inset -10px -14px 15px rgba(0,0,0,0.86)`
+          : `inset 8px 8px 15px rgba(0,0,0,0.35),
+             inset -10px -14px 15px rgba(0,0,0,0.86)`,
       }}
     >
-      <div className="absolute inset-0 bg-black/10" />
+      {/* cover image, slowly breathes/zooms while playing */}
+      <div
+        className={`absolute inset-0 transition-transform duration-[3000ms] ease-linear ${
+          isPlaying ? "scale-110" : "scale-100"
+        }`}
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
 
-      {isActive && (
-        <div className="absolute top-2 right-2 z-20">
-          <div
-            className={`w-2.5 h-2.5 rounded-full bg-white ${
-              play ? "animate-pulse" : "opacity-40"
-            }`}
-          />
+      {/* darken overlay — lifts when the card is active/selected */}
+      <div
+        className={`absolute inset-0 transition-colors duration-500 ${
+          isActive ? "bg-black/0" : "bg-black/25"
+        }`}
+      />
+
+      {/* live equalizer bars, only while actually playing */}
+      {isPlaying && (
+        <div className="absolute top-3 left-3 z-20 flex items-end gap-[3px] h-4">
+          {[0, 1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className="w-[3px] bg-white rounded-full eq-bar"
+              style={{ animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
         </div>
       )}
 
+      {/* paused-but-selected indicator */}
+      {isActive && !isPlaying && (
+        <div className="absolute top-3 right-3 z-20">
+          <div className="w-2.5 h-2.5 rounded-full bg-white/50" />
+        </div>
+      )}
+
+      {/* bottom gradient for legibility, brighter while playing */}
+      <div
+        className={`absolute inset-x-0 bottom-0 h-16 pointer-events-none transition-opacity duration-500 ${
+          isPlaying ? "opacity-90" : "opacity-60"
+        }`}
+        style={{
+          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
+        }}
+      />
+
       <div className="absolute inset-0 flex items-end justify-center z-10">
         <h3
-          className=" pointer-events-none
-        text-white
-        text-[18px]
-        font-medium
-        tracking-[2px]
-        text-center
-        pb-2
-        drop-shadow-lg
-      "
+          className={`
+            pointer-events-none
+            text-white
+            text-[15px]
+            font-medium
+            tracking-[2px]
+            text-center
+            pb-2
+            bree-serif-regular 
+            drop-shadow-lg
+            transition-transform duration-300
+            ${isActive ? "translate-y-0" : "translate-y-1 group-hover/card:translate-y-0"}
+          `}
         >
           {heading}
         </h3>
       </div>
+
+      <style jsx>{`
+        .eq-bar {
+          animation: eq 0.8s ease-in-out infinite;
+        }
+        @keyframes eq {
+          0%,
+          100% {
+            height: 4px;
+          }
+          50% {
+            height: 16px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
 
-// ---- Builds a wavy vertical clip-path boundary ----
-// boundaryX: the % x-position the wave line sits at (can go <0% or >100%,
-//            since points outside the box are simply clipped by the box itself)
-// amplitude: how far each point zig-zags from boundaryX, in %
-// rows:      number of segments down the wave (more = smoother wave)
-function buildWaveClipPath(boundaryX, amplitude, rows) {
+
+// ---- Builds a smooth sine-curve clip-path boundary (elegant wipe, not zig-zag) ----
+function buildWaveClipPath(boundaryX, amplitude, rows, diagonal = 0, phase = 0) {
   const points = [`0% 0%`];
   for (let i = 0; i <= rows; i++) {
-    const y = (i / rows) * 100;
-    const amp = i % 2 === 0 ? amplitude : -amplitude;
-    points.push(`${boundaryX + amp}% ${y}%`);
+    const t = i / rows;
+    const y = t * 100;
+    const drift = t * diagonal;
+    const amp = Math.sin(t * Math.PI * 2 + phase) * amplitude;
+    const x = boundaryX + drift + amp;
+    
+    points.push(`${x.toFixed(4)}% ${y.toFixed(4)}%`);
   }
   points.push(`0% 100%`);
   return `polygon(${points.join(", ")})`;
 }
 
-// wave sits fully off-screen to the left when hidden, fully past the right
-// edge when revealed -- the transition sweeps the wavy line across
-const WAVE_HIDDEN_CLIP = buildWaveClipPath(-15, 8, 8);
-const WAVE_VISIBLE_CLIP = buildWaveClipPath(112, 8, 8);
+// entrance sweep: wave starts off-screen left, travels fully past the right
+const WAVE_HIDDEN_CLIP = buildWaveClipPath(-8, 6, 32, 14, 0);
+const WAVE_VISIBLE_CLIP = buildWaveClipPath(112, 6, 32, 14, 0);
+
+// idle ripple frames: same reveal position, phase cycled for a gentle
+// continuous "wave still moving" feel once fully visible
+const RIPPLE_FRAMES = [0, 0.5, 1, 1.5].map((p) =>
+  buildWaveClipPath(112, 6, 32, 14, p * Math.PI)
+);
 
 function PhotoGrid({ image = "/Assets/Intro/photo-memories.png", className = "" }) {
   return (
-    <div
-      className={`
-        absolute
-        pointer-events-none
-
-        ${className}
-      `}
-    >
+    <div className={`absolute pointer-events-none ${className}`}>
       <div
         className="wave-mask relative w-full h-full"
         style={{
@@ -129,34 +197,108 @@ function PhotoGrid({ image = "/Assets/Intro/photo-memories.png", className = "" 
           WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 50%)",
           "--hidden-clip": WAVE_HIDDEN_CLIP,
           "--visible-clip": WAVE_VISIBLE_CLIP,
+          "--ripple-0": RIPPLE_FRAMES[0],
+          "--ripple-1": RIPPLE_FRAMES[1],
+          "--ripple-2": RIPPLE_FRAMES[2],
+          "--ripple-3": RIPPLE_FRAMES[3],
         }}
       >
         <Image
           src={image}
           alt=""
           fill
-          className="object-contain pointer-events-none"
+          className="wave-image object-contain pointer-events-none"
         />
       </div>
 
       <style jsx>{`
         .wave-mask {
           clip-path: var(--hidden-clip);
-          transition: clip-path 900ms cubic-bezier(0.65, 0.05, 0.36, 1);
+          /* sweep in, then hand off to the looping ripple once revealed */
+          transition: clip-path 1100ms cubic-bezier(0.22, 1, 0.36, 1);
         }
         :global(.group:hover) .wave-mask {
           clip-path: var(--visible-clip);
+          animation: ripple 4200ms ease-in-out 1100ms infinite;
+        }
+
+        .wave-image {
+          opacity: 0;
+          transform: scale(1.06);
+          filter: blur(6px);
+          transition:
+            opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+            filter 900ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        :global(.group:hover) .wave-image {
+          opacity: 1;
+          transform: scale(1);
+          filter: blur(0px);
+        }
+
+        /* subtle looping ripple across the four phase-shifted frames,
+           keeps the edge feeling alive instead of static once revealed */
+        @keyframes ripple {
+          0%   { clip-path: var(--visible-clip); }
+          25%  { clip-path: var(--ripple-1); }
+          50%  { clip-path: var(--ripple-2); }
+          75%  { clip-path: var(--ripple-3); }
+          100% { clip-path: var(--visible-clip); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .wave-mask,
+          .wave-image {
+            transition: none !important;
+            animation: none !important;
+          }
         }
       `}</style>
     </div>
   );
 }
 
+function useTypewriter(words, typingSpeed = 80, deletingSpeed = 20, pauseTime = 1200) {
+  const [text, setText] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+
+  useEffect(() => {
+    const currentWord = words[wordIndex % words.length];
+
+    let timeout;
+
+    if (!isDeleting && text === currentWord) {
+      // finished typing, pause then start deleting
+      timeout = setTimeout(() => setIsDeleting(true), pauseTime);
+    } else if (isDeleting && text === "") {
+      // finished deleting, move to next word
+      setIsDeleting(false);
+      setWordIndex((prev) => prev + 1);
+    } else {
+      const nextText = isDeleting
+        ? currentWord.slice(0, text.length - 1)
+        : currentWord.slice(0, text.length + 1);
+
+      timeout = setTimeout(
+        () => setText(nextText),
+        isDeleting ? deletingSpeed : typingSpeed
+      );
+    }
+
+    return () => clearTimeout(timeout);
+  }, [text, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseTime]);
+
+  return text;
+}
+
 export default function Introduction() {
-  const [wordChange, setWordChange] = useState(false);
 
+  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
   const [play, setPlay] = useState(true);
-
+  const typedWord = useTypewriter(["Developer", "Designer"]);
   const [currentSong, setCurrentSong] = useState(
     "/Assets/mp3/glorious-purpose.mp3"
   );
@@ -171,13 +313,7 @@ export default function Introduction() {
     setCursorPos({ x: e.clientX, y: e.clientY });
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWordChange((prev) => !prev);
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, []);
+  
 
   // track which song is actually loaded into the <audio> element right now,
   // so we know whether a song change happened vs just a play/pause toggle
@@ -279,44 +415,25 @@ export default function Introduction() {
           }}
         />
 
-        <div className="text-[#C4C4C4] items-center flex justify-center mb-[20%]">
-          <h3 className="text-4xl mt-[20%] bree-serif-regular  w-[900px] text-center">
-            Hi, I'm <span className="text-6xl text-[#ff0000]">Seo James</span>, a passionate
-            <span className="inline-flex perspective align-middle mx-2">
-              <span
-                className="relative inline-block w-[220px]  preserve-3d transition-transform duration-700"
-                style={{
-                  transform: wordChange ? "rotateX(180deg)" : "rotateX(0deg)",
-                }}
-              >
-                {/* Developer */}
-                <span
-                  className="absolute inset-0 flex items-center justify-center "
-                  style={{
-                    transform: "translateZ(30px)",
-                    backfaceVisibility: "hidden",
-                  }}
-                >
-                  Developer
-                </span>
 
-                {/* Designer */}
-                <span
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    transform: "rotateX(180deg) translateZ(30px)",
-                    backfaceVisibility: "hidden",
-                  }}
-                >
-                  Designer
-                </span>
-              </span>
-            </span>
-            who builds things with purpose, curiosity, and a love for making ideas real.
-          </h3>
-        </div>
 
-        <div className="relative my-[10%] w-full h-[150px] items-center flex">
+<div className="text-[#C4C4C4] items-center flex justify-center pb-[20%]">
+  <h3
+    ref={headingRef}
+    className={`reveal-wipe ${headingVisible ? "is-visible" : ""} text-4xl mt-[20%] gabriela-regular w-[900px] text-center`}
+  >
+    Hi, I'm <span className="text-6xl text-[#ff0000]">Seo James</span>, a passionate {" "}
+    <span className="text-[#ff0000] inline-block w-[200px] text-left">
+      {typedWord}
+      <span className="animate-pulse">|</span>
+    </span>{" "}
+    who builds things with purpose, curiosity, and a love for making ideas real.
+  </h3>
+</div>
+
+
+
+        <div className="relative my-[10%] w-full h-[150px] items-center flex gabriela-regular">
           <div className="absolute left-[20%]  -translate-x-1/2 w-[250px] h-[250px]">
             {/* Everything controlled by camera hover */}
             <div className="absolute inset-0 flex items-center justify-center group">
@@ -372,11 +489,11 @@ export default function Introduction() {
               {/* Curved text */}
               <div
                 className="
-    absolute inset-0
-    transition-all duration-300
-    group-hover:opacity-0
-    group-hover:scale-90
-  "
+                  absolute inset-0
+                  transition-all duration-300
+                  group-hover:opacity-0
+                  group-hover:scale-90
+                "
               >
                 <CurvedText text="✦ MUSIC ✦ PLAY ✦ PAUSE ✦ REWIND ✦ REPEAT" />
               </div>
@@ -385,7 +502,7 @@ export default function Introduction() {
               <MusicCard
                 src="/Assets/mp3/Sign-of-the-Times.mp3"
                 bgImage="/Assets/mp3/Sign-of-the-Times-cover.png"
-                heading="Sign of the Times"
+                heading="Sign of the  Times"
                 currentSong={currentSong}
                 play={play}
                 setCurrentSong={setCurrentSong}
