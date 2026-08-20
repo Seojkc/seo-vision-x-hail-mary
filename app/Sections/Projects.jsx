@@ -222,7 +222,7 @@ export default function Projects() {
   const P2_END = 0.58; // crossfade ends
   const P3_END = 0.85; // grow-to-final ends, hold begins
 
-  const SHRINK_SCALE = 0.4; // scale both cards sit at during the crossfade
+  const SHRINK_SCALE = 0.6; // scale both cards sit at during the crossfade
 
   function computeStates(t) {
     // defaults: project1 fully visible/full-size, project2 hidden/small-below

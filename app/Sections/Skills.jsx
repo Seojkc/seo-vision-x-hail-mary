@@ -102,6 +102,9 @@ export default function Skills() {
     willChange: "transform, opacity",
   });
 
+
+  
+
   return (
     <>
       <div ref={sectionRef} className="h-[100vh] relative bg-[#0c0c0c] ">
@@ -149,20 +152,26 @@ export default function Skills() {
           <div className="h-full w-[58%] pl-[3%] flex flex-col justify-center gap-[1.6vh]">
             {skillCategories.map((cat, i) => {
               // one shared background image, tiled -- fades out by 90% of the row's width
+              const entrance = rowStyle(i); // opacity/transform for the intro reveal
 
               return (
                 <div
-                  key={cat.title}
-                  onMouseEnter={() => setIsSkillHover(true)}
-                  onMouseLeave={() => setIsSkillHover(false)}
-                  className="group relative overflow-hidden border-b border-black/10 py-[1.4vh] last:border-none hover:py-[5vh] hover:border-black/30"
-                  style={{
-                    ...rowStyle(i),
-                    transitionProperty: `${rowStyle(i).transitionProperty}, padding, border-color`,
-                  }}
-                >
+                    key={cat.title}
+                    onMouseEnter={() => setIsSkillHover(true)}
+                    onMouseLeave={() => setIsSkillHover(false)}
+                    className="group relative overflow-hidden border-b border-black/10 py-[1.4vh] last:border-none hover:py-[5vh] hover:border-black/30"
+                    style={{
+                      opacity: entrance.opacity,
+                      transform: entrance.transform,
+                      willChange: "transform, opacity",
+                      transitionProperty: "transform, opacity, padding, border-color",
+                      transitionDuration: `${ROW_DURATION}ms, ${ROW_DURATION}ms, 650ms, 650ms`,
+                      transitionTimingFunction: `${SPRING_EASE}, ${SPRING_EASE}, ${EXPAND_EASE}, ${EXPAND_EASE}`,
+                      transitionDelay: `${entrance.transitionDelay}, ${entrance.transitionDelay}, 0ms, 0ms`,
+                    }}
+                  >
                   {/* row highlight sweep, grows in from the left behind everything */}
-                  <div className="pointer-events-none absolute inset-0 -z-10 origin-left scale-x-0 bg-black/[0.03] transition-transform duration-500 ease-out group-hover:scale-x-100" />
+                  <div className="pointer-events-none absolute inset-0 -z-10 origin-left scale-x-0  transition-transform duration-500 ease-out group-hover:scale-x-100" />
 
                   {/* per-category background artwork -- tiles left-to-right,
                       fading to transparent by 90% of the row's width */}
@@ -172,7 +181,7 @@ export default function Skills() {
                       transitionTimingFunction: EXPAND_EASE,
                       backgroundImage: `url(${BGSRC[i]})`,
                       backgroundRepeat: "repeat-x",
-                      backgroundPosition: " bottom",
+                      backgroundPosition: " left bottom",
                       backgroundSize: "auto 100%",
                       maskImage:
                         "linear-gradient(to right, transparent 0%, black 30%,black 40%, transparent 80%)",

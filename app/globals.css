@@ -10,6 +10,11 @@
 @import "tailwindcss";
 
 
+body {
+  cursor: url('../public/Assets/astronaut-cursor-64.png') 4 4, auto !important;
+}
+
+
 .science-fot {
   font-family: "Agdasima", sans-serif;
   font-weight: 700;
