@@ -233,7 +233,8 @@ export default function Introduction() {
   const imageWrapperRef = useRef(null);
   const boundaryRef = useRef(null);
   const followerWrapperRef = useRef(null); // xenon-ship
-
+  const [visible, setVisible] = useState(false);
+  const sectionRef = useRef(null);
   const [position, setPosition] = useState(null);
   const [rotation, setRotation] = useState(0);
   const [followerPosition, setFollowerPosition] = useState(null); // eased follower pos
@@ -267,6 +268,40 @@ export default function Introduction() {
     []
   );
 
+
+
+
+    useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const line1 = "code";
+  const line2 = "without";
+  const line3 = "Limits";
+  const line4 = "Building with code, creativity, and curiosity.";
+
+  // running offset so delay keeps increasing across all four lines
+  let offset = 0;
+  const line1Start = offset; offset += line1.length;
+  const line2Start = offset; offset += line2.length;
+  const line3Start = offset; offset += line3.length;
+  const line4Start = offset;
+
+
   // Seed the follower's starting position from wherever it's rendered by
   // default CSS, so it doesn't jump when it first gets an inline position.
   useEffect(() => {
@@ -279,6 +314,32 @@ export default function Introduction() {
       followerTargetPos.current = { x: startX, y: startY };
     }
   }, []);
+
+  const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+const LETTER_DURATION = 500;
+const LETTER_DELAY_STEP = 30; // smaller step since this block has a lot of characters total
+
+function renderLetters(text, startIndex, visible) {
+  return text.split("").map((char, i) => (
+    <span
+      key={startIndex + i}
+      style={{
+        display: "inline-block",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translate(0px, 0px)" : "translate(0px, 110px)",
+        transitionProperty: "transform, opacity",
+        transitionDuration: `${LETTER_DURATION}ms`,
+        transitionDelay: `${(startIndex + i) * LETTER_DELAY_STEP}ms`,
+        transitionTimingFunction: SPRING_EASE,
+        willChange: "transform, opacity",
+      }}
+    >
+      {char === " " ? "\u00A0" : char}
+    </span>
+  ));
+}
+
+
 
   function dragStart(e) {
     const rect = imageWrapperRef.current.getBoundingClientRect();
@@ -461,16 +522,22 @@ export default function Introduction() {
             />
           </div>
 
-          <div className="absolute mt-[16vw] ml-20 z-20 bree-serif-regular">
-            <div className="flex align-down">
-              <h1 className="  text-[10vw]   ">code</h1>
-              <h1 className=" mt-26 ml-6 text-[5vw]  ">without</h1>
-            </div>
-            <h1 className=" text-[15vw]  mt-[-150px] ml-[-5px] text-[#ff0000]">Limits</h1>
-            <h1 className=" text-[2vw]  mt-[-80px] ml-[10px] ">
-              Building with code, creativity, and curiosity.
-            </h1>
-          </div>
+          <div ref={sectionRef} className="absolute mt-[16vw] ml-20 z-20">
+      <div className="flex align-down">
+        <h1 className="text-[10vw] text-elegant-red">
+          {renderLetters(line1, line1Start, visible)}
+        </h1>
+        <h1 className="mt-26 ml-6 text-[5vw] text-[#b0b0b0]">
+          {renderLetters(line2, line2Start, visible)}
+        </h1>
+      </div>
+      <h1 className="text-[15vw] mt-[-150px] ml-[-5px] text-[#e0e0e0]">
+        {renderLetters(line3, line3Start, visible)}
+      </h1>
+      <h1 className="text-[2vw] mt-[-80px] ml-[10px] text-[#b0b0b0]">
+        {renderLetters(line4, line4Start, visible)}
+      </h1>
+    </div>
 
           {dragMeComment && (
             <Image

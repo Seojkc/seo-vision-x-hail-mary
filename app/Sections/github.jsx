@@ -150,8 +150,8 @@ function panelPaddingPx(cardPxWidth) {
 }
 
 // shared easing across the panel move + subheading fade -- same smooth
-// deceleration curve used elsewhere in the site's hover animations
-const REVEAL_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+// deceleration curve used elsewhere on the site's hover animations
+const REVEAL_EASE = "cubic-bezier(0.46, 1, 0.3, 1)";
 
 // ---- typewriter: types `text` out a character at a time while `active`,
 // resets instantly back to empty the moment `active` goes false ----
@@ -177,8 +177,8 @@ function useTypewriter(text, active, speedMs = 16) {
 }
 
 function CardContent({ card, cardPxWidth, hovered }) {
-  const fontSize = headingFontSize(cardPxWidth)*1.5;
-  const subFontSize = subheadingFontSize(cardPxWidth)*1.5;
+  const fontSize = headingFontSize(cardPxWidth) * 1.5;
+  const subFontSize = subheadingFontSize(cardPxWidth) * 1.5;
   const badgeSize = badgeFontSize(cardPxWidth);
   const blurPx = glassBlurPx(cardPxWidth);
   const pad = panelPaddingPx(cardPxWidth);
@@ -255,12 +255,34 @@ function CardContent({ card, cardPxWidth, hovered }) {
   );
 }
 
-function ProjectCard({ card, cardPxWidth, cardPxHeight, left, top, zIndex }) {
+// ---- ProjectCard ----
+// left/top/width/height stay pinned at the card's FINAL layout values the
+// whole time. Only `transform` animates, between a "collapsed onto the
+// seed card" state and "settled at final spot" -- that's what makes the
+// spiral-bloom reveal run on the GPU instead of thrashing layout.
+function ProjectCard({
+  card,
+  cardPxWidth,
+  cardPxHeight,
+  left,
+  top,
+  zIndex,
+  revealed,
+  dx,
+  dy,
+  scaleRatio,
+  originRotate,
+  delay,
+}) {
   const [hovered, setHovered] = useState(false);
+
+  const transform = revealed
+    ? `translate(-50%, -50%) rotate(${card.rotate}deg) scale(1)`
+    : `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${originRotate}deg) scale(${scaleRatio})`;
 
   return (
     <div
-      className="group absolute rounded-xl border border-black/10 shadow-md overflow-hidden transition-transform duration-300"
+      className="group absolute rounded-xl border border-black/10 shadow-md overflow-hidden"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -268,7 +290,13 @@ function ProjectCard({ card, cardPxWidth, cardPxHeight, left, top, zIndex }) {
         top,
         width: cardPxWidth,
         height: cardPxHeight,
-        transform: `translate(-50%, -50%) rotate(${card.rotate}deg)`,
+        transform,
+        transformOrigin: "center center",
+        transitionProperty: "transform",
+        transitionDuration: "2000ms",
+        transitionTimingFunction: REVEAL_EASE,
+        transitionDelay: `${delay}ms`,
+        willChange: "transform",
         zIndex,
       }}
     >
@@ -312,11 +340,6 @@ function useInView(options = { threshold: 0.3 }) {
 // interpolates between two hex colors -- used so a row of discrete blocks
 // still reads as one smooth gradient sweep from block to block
 function hexToRgb(hex) {
-
-
-  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
-
-
   const clean = hex.replace("#", "");
   const bigint = parseInt(clean, 16);
   return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
@@ -335,9 +358,7 @@ const GRADIENT_END = "#3b82f6";
 const BLOCK_HOURS = 0.5; // each block = 30 minutes
 
 function WeekInCode() {
-
-    const [headingRef, headingVisible] = useScrollReveal({threshold:1})
-
+  const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
   const [ref, inView] = useInView({ threshold: 0.25 });
 
   const maxHours = Math.max(...weekData.map((d) => d.hours));
@@ -349,8 +370,12 @@ function WeekInCode() {
   return (
     <div ref={ref} className="absolute text-black top-[60%] left-[5%] w-[42%] ">
       <div className="flex items-baseline justify-between mb-8">
-        <h2 ref={headingRef}
-    className={`reveal-wipe ${headingVisible ? "is-visible" : ""} text-black text-[4.4vw]  invert leading-none font-[800]`}>My Week in Code</h2>
+        <h2
+          ref={headingRef}
+          className={`reveal-wipe ${headingVisible ? "is-visible" : ""} text-black text-[4.4vw]  invert leading-none font-[800]`}
+        >
+          My Week in Code
+        </h2>
       </div>
 
       <div className="flex flex-col gap-[1.3vh] pointer-events-none">
@@ -399,12 +424,78 @@ function WeekInCode() {
   );
 }
 
+
+
+const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)"; // overshoots then settles — good for "pop"
+const LETTER_DURATION = 600;
+const LETTER_DELAY_STEP = 60; // ms between each letter (200ms will feel slow letter-by-letter for a whole sentence)
+const LOGO_DURATION = 700;
+
+// turns a string into an array of animated letter spans, continuing the
+// delay index from `startIndex` so multiple words can cascade smoothly
+function renderLetters(text, startIndex, visible) {
+  return text.split("").map((char, i) => (
+    <span
+      key={startIndex + i}
+      style={{
+        display: "inline-block",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translate(0px, 0px)" : "translate(0px, 110px)",
+        transitionProperty: "transform, opacity",
+        transitionDuration: `${LETTER_DURATION}ms`,
+        transitionDelay: `${(startIndex + i) * LETTER_DELAY_STEP}ms`,
+        transitionTimingFunction: SPRING_EASE,
+        willChange: "transform, opacity",
+      }}
+    >
+      {char === " " ? "\u00A0" : char}
+    </span>
+  ));
+}
+
 export default function GithubSection() {
   const containerRef = useRef(null);
-  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
-
+  const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
 
   const [size, setSize] = useState({ width: 0, height: 0 });
+  // flips once, the first time the card field scrolls into view --
+  // drives the spiral-bloom reveal of all ten project cards
+  const [revealed, setRevealed] = useState(false);
+
+
+  const [visible, setVisible] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect(); // remove if you want it to replay on every scroll in/out
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const part1 = "A Few From";
+  const part2 = "GitHub";
+
+  const logoStyle = {
+    opacity: visible ? 0.5 : 0, // 0.5 to match your original opacity-50 end state
+    transform: visible ? "scale(1) translateY(0px)" : "scale(0.3) translateY(20px)",
+    transitionProperty: "transform, opacity",
+    transitionDuration: `${LOGO_DURATION}ms`,
+    transitionTimingFunction: SPRING_EASE,
+    willChange: "transform, opacity",
+  };
+
 
   useEffect(() => {
     const el = containerRef.current;
@@ -417,9 +508,26 @@ export default function GithubSection() {
     return () => ro.disconnect();
   }, []);
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealed(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const { width, height } = size;
   const dotX = width * DOT_X_RATIO;
   const dotY = height * DOT_Y_RATIO;
+  const seed = cards[cards.length - 1]; // origin point every card blooms from
 
   return (
     <div
@@ -428,7 +536,7 @@ export default function GithubSection() {
         backgroundColor: "#f5f5f5",
         backgroundImage: "radial-gradient(circle,rgba(145, 145, 145, 0.64) 1px, transparent 0.5px)",
         backgroundSize: "30px 30px",
-    }}
+      }}
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
@@ -447,19 +555,23 @@ export default function GithubSection() {
         style={{ background: "linear-gradient(to top,#F2F0EF, transparent 30%, transparent)" }}
       />
 
-      <div className="relative text-center py-10">
-        <Image
-          width={600}
-          height={500}
-          src="/Assets/Git.png"
-          alt="github logo"
-          className="w-[600px] h-[auto] invert object-contain absolute -right-70 -top-40 opacity-50"
-        />
+    <div ref={sectionRef} className="relative text-center py-10">
+      <Image
+        width={600}
+        height={500}
+        src="/Assets/Git.png"
+        alt="github logo"
+        style={logoStyle}
+        className="w-[600px] h-[auto] invert object-contain absolute -right-70 -top-40"
+      />
 
-        <h1 className="relative z-10 flex items-center justify-center gap-5 font-bold text-[4vw] text-[#0c0c0c] p-[30px]">
-          A Few From <span className="text-[#ff0000]">GitHub</span> 
-        </h1>
-      </div>
+      <h1 className="relative z-10 flex items-center justify-center gap-5 font-bold text-[4vw] text-[#0c0c0c] p-[30px]">
+        <span>{renderLetters(part1, 0, visible)}</span>
+        <span className="text-elegant-red">
+          {renderLetters(part2, part1.length, visible)}
+        </span>
+      </h1>
+    </div>
 
       <div ref={containerRef} className="relative w-full pb-10" style={{ height: "170vh" }}>
         {width > 0 && (
@@ -487,7 +599,6 @@ export default function GithubSection() {
                     className="object-contain invert"
                   />
                 </a>
-                
               </div>
             </div>
 
@@ -496,6 +607,24 @@ export default function GithubSection() {
               const h = w * CARD_ASPECT;
               const left = width * card.x;
               const top = height * card.y;
+
+              const isSeed = i === cards.length - 1;
+              const originLeft = width * seed.x;
+              const originTop = height * seed.y;
+              const originW = width * seed.w;
+
+              // how far / how much smaller this card starts, relative to
+              // its own final slot -- purely transform math, no layout
+              // thrash, which is what keeps the reveal smooth
+              const dx = isSeed ? 0 : originLeft - left;
+              const dy = isSeed ? 0 : originTop - top;
+              const scaleRatio = isSeed ? 1 : originW / w;
+              const originRotate = isSeed ? card.rotate : seed.rotate;
+
+              // cards nearest the seed lead the bloom; the big content
+              // cards arrive last, so the spiral visibly draws itself
+              // outward from the origin point
+              const delay = (cards.length - 1 - i) * 70;
 
               return (
                 <ProjectCard
@@ -506,6 +635,12 @@ export default function GithubSection() {
                   left={left}
                   top={top}
                   zIndex={10 + i}
+                  revealed={revealed}
+                  dx={dx}
+                  dy={dy}
+                  scaleRatio={scaleRatio}
+                  originRotate={originRotate}
+                  delay={delay}
                 />
               );
             })}

@@ -294,6 +294,18 @@ function useTypewriter(words, typingSpeed = 80, deletingSpeed = 20, pauseTime = 
   return text;
 }
 
+// shared elegant deceleration curve, consistent with the rest of the site
+const POP_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+const TEXT_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)"; // slight overshoot, feels alive on scale-in
+
+const POP_DURATION = 900;
+const POP_STAGGER = 160;
+
+// curved text starts once its group's pop-up is mostly settled, not at the
+// same instant -- reads as two deliberate beats instead of one blob of motion
+const TEXT_START_OFFSET = 550;
+const TEXT_DURATION = 750;
+
 export default function Introduction() {
 
   const [headingRef, headingVisible] = useScrollReveal({threshold:1})
@@ -313,6 +325,34 @@ export default function Introduction() {
     setCursorPos({ x: e.clientX, y: e.clientY });
   };
 
+
+  const [rowRef, rowVisible] = useScrollReveal({ threshold: 0.2 });
+
+  // index 0 = camera, 1 = headphones, 2 = mp3 player
+  const popDelay = (i) => i * POP_STAGGER;
+  const textDelay = (i) => popDelay(i) + TEXT_START_OFFSET;
+
+  const popStyle = (i) => ({
+    opacity: rowVisible ? 1 : 0,
+    transform: rowVisible ? "translateY(0px)" : "translateY(70px)",
+    transitionProperty: "transform, opacity",
+    transitionDuration: `${POP_DURATION}ms`,
+    transitionTimingFunction: POP_EASE,
+    transitionDelay: `${popDelay(i)}ms`,
+    willChange: "transform, opacity",
+  });
+
+  const textRevealStyle = (i) => ({
+    opacity: rowVisible ? 1 : 0,
+    transform: rowVisible ? "scale(1)" : "scale(0)",
+    transformOrigin: "center center",
+    transitionProperty: "transform, opacity",
+    transitionDuration: `${TEXT_DURATION}ms`,
+    transitionTimingFunction: TEXT_EASE,
+    transitionDelay: `${textDelay(i)}ms`,
+    willChange: "transform, opacity",
+  });
+  
   
 
   // track which song is actually loaded into the <audio> element right now,
@@ -433,248 +473,257 @@ export default function Introduction() {
 
 
 
-        <div className="relative my-[10%] w-full h-[150px] items-center flex gabriela-regular">
-          <div className="absolute left-[20%]  -translate-x-1/2 w-[250px] h-[250px]">
-            {/* Everything controlled by camera hover */}
-            <div className="absolute inset-0 flex items-center justify-center group">
-              {/* Curved text */}
-              <div
-                className="
-                  absolute inset-0
-                  transition-all duration-300
-                  group-hover:opacity-0
-                  group-hover:scale-90
-                "
-              >
-                <CurvedText
-                  text=" ✿ CAPTURE ✿ MOMENTS ✿ STORIES ✿ MEMORIES"
-                  letterSpacing={3}
-                />
-              </div>
-
-              {/* PHOTO GRID */}
-              <PhotoGrid
-                className="
-                  right-1/2
-                  top-1/2
-                  z-21
-                  translate-x-[50%]
-                  -translate-y-1/2
-                  w-[900px]
-                  h-[550px]
-                "
-              />
-
-              {/* CAMERA */}
-              <Image
-                src="/Assets/Intro/camera.png"
-                width={150}
-                height={100}
-                alt="camera"
-                className="
-                  relative
-                  z-20
-                  rotate-[349deg]
-                  transition-transform
-                  duration-300
-                  group-hover:scale-105
-                "
+    <div
+      ref={rowRef}
+      className="relative my-[10%] w-full h-[150px] items-center flex gabriela-regular"
+    >
+      {/* ===================== CAMERA GROUP ===================== */}
+      <div
+        className="absolute left-[20%] -translate-x-1/2 w-[250px] h-[250px]"
+        style={popStyle(0)}
+      >
+        <div className="absolute inset-0 flex items-center justify-center group">
+          {/* Curved text -- scroll-scale-in wrapper OUTSIDE the hover-hide wrapper,
+              so scroll-reveal and hover-hide animate independently without
+              fighting over the same transform */}
+          <div className="absolute inset-0" style={textRevealStyle(0)}>
+            <div
+              className="
+                absolute inset-0
+                transition-all duration-300
+                group-hover:opacity-0
+                group-hover:scale-90
+              "
+            >
+              <CurvedText
+                text=" ✿ CAPTURE ✿ MOMENTS ✿ STORIES ✿ MEMORIES"
+                letterSpacing={3}
               />
             </div>
           </div>
 
-          <div className="absolute left-[50%] -translate-x-1/2 w-[250px] h-[250px]">
-            {/* Everything controlled by headphone hover */}
-            <div className="absolute inset-0 flex items-center justify-center group">
-              {/* Curved text */}
-              <div
-                className="
-                  absolute inset-0
-                  transition-all duration-300
-                  group-hover:opacity-0
-                  group-hover:scale-90
-                "
-              >
-                <CurvedText text="✦ MUSIC ✦ PLAY ✦ PAUSE ✦ REWIND ✦ REPEAT" />
-              </div>
+          {/* PHOTO GRID */}
+          <PhotoGrid
+            className="
+              right-1/2
+              top-1/2
+              z-21
+              translate-x-[50%]
+              -translate-y-1/2
+              w-[900px]
+              h-[550px]
+            "
+          />
 
-              {/* TOP CARD */}
-              <MusicCard
-                src="/Assets/mp3/Sign-of-the-Times.mp3"
-                bgImage="/Assets/mp3/Sign-of-the-Times-cover.png"
-                heading="Sign of the  Times"
-                currentSong={currentSong}
-                play={play}
-                setCurrentSong={setCurrentSong}
-                setPlay={setPlay}
-                className="
-      -top-[110px]
-      left-1/2
-      -translate-x-1/2
-    "
-              />
-
-              {/* RIGHT CARD */}
-              <MusicCard
-                src="/Assets/mp3/Marakkavillayae.mp3"
-                bgImage="/Assets/mp3/Marakkavillayae-cover.png"
-                heading="Marakkavillayae"
-                currentSong={currentSong}
-                play={play}
-                setCurrentSong={setCurrentSong}
-                setPlay={setPlay}
-                className="
-      -right-[110px]
-      top-1/2
-      -translate-y-1/2
-      delay-75
-    "
-              />
-
-              {/* BOTTOM CARD */}
-              <MusicCard
-                src="/Assets/mp3/glorious-purpose.mp3"
-                bgImage="/Assets/mp3/glorious-purpose-cover.png"
-                heading="Purpose is Glorious"
-                currentSong={currentSong}
-                play={play}
-                setCurrentSong={setCurrentSong}
-                setPlay={setPlay}
-                className="
-      -bottom-[110px]
-      left-1/2
-      -translate-x-1/2
-      delay-150
-    "
-              />
-
-              {/* LEFT CARD */}
-              <MusicCard
-                src="/Assets/mp3/aaro-nenjil.mp3"
-                bgImage="/Assets/mp3/aaro-nenjil-cover.png"
-                heading="Aaro Nenjil"
-                currentSong={currentSong}
-                play={play}
-                setCurrentSong={setCurrentSong}
-                setPlay={setPlay}
-                className="
-      -left-[110px]
-      top-1/2
-      -translate-y-1/2
-      delay-200
-    "
-              />
-
-              {/* HEADPHONE */}
-              <Image
-                src="/Assets/Intro/headphone.png"
-                width={150}
-                height={100}
-                alt="headphones"
-                className="
-      relative
-      z-20
-      rotate-[349deg]
-      transition-transform
-      duration-300
-      group-hover:scale-105
-    "
-              />
-            </div>
-          </div>
-
-          <div className="  cursor-point pointer-events-none absolute left-[82%] -translate-x-1/2 w-[35vw] aspect-[4/2]">
-
-
-        
-
-
-            {/* MP3 background */}
-            <Image
-              src="/Assets/Intro/mp3-background-1.png"
-              alt="mp3 player"
-              fill
-              className="object-contain"
-            />
-
-            {/* Vinyl */}
-            <Image
-              src="/Assets/Intro/vinyl-disc.png"
-              alt="vinyl disc"
-              width={150}
-              height={100}
-              className={`
-                        absolute
-                        left-[35%]
-                        top-[15%]
-                        w-[25%]
-                        h-auto
-
-                        transition-all duration-700
-
-                        ${play ? "animate-spin" : ""}
-                      `}
-            />
-
-            <Image
-              src="/Assets/Intro/needle.png"
-              alt="needle"
-              width={250}
-              height={100}
-              className={`
-                          absolute
-                          left-[44%]
-                          top-[-15%]
-                          w-[32.5%]
-                          h-auto
-
-                          transition-transform duration-300
-
-                          ${play ? "rotate-10" : "-rotate-20"}
-                        `}
-            />
-
-            {/* Pause */}
-            <Image
-              src="/Assets/Intro/pause-button.png"
-              alt="pause"
-              width={50}
-              height={100}
-              className={`
-                        pointer-events-auto
-                        absolute
-                        left-[35%]
-                        top-[73%]
-                        w-[8%]
-                        h-auto
-                        cursor-pointer
-                        ${play ? "scale-100" : "scale-90 invert"}
-                      `}
-              onClick={() => setPlay(false)}
-            />
-
-            {/* Play */}
-            <Image
-              src="/Assets/Intro/play-button.png"
-              alt="play"
-              width={50}
-              height={100}
-              className={`
-                        pointer-events-auto
-                        absolute
-                        left-[44%]
-                        top-[73%]
-                        w-[8%]
-                        h-auto
-
-                        cursor-pointer
-                        transition-transform duration-200
-                        ${play ? "scale-90 invert" : "scale-100"}
-                      `}
-              onClick={() => setPlay(true)}
-            />
-          </div>
+          {/* CAMERA */}
+          <Image
+            src="/Assets/Intro/camera.png"
+            width={150}
+            height={100}
+            alt="camera"
+            className="
+              relative
+              z-20
+              rotate-[349deg]
+              transition-transform
+              duration-300
+              group-hover:scale-105
+            "
+          />
         </div>
+      </div>
+
+      {/* ===================== HEADPHONE GROUP ===================== */}
+      <div
+        className="absolute left-[50%] -translate-x-1/2 w-[250px] h-[250px]"
+        style={popStyle(1)}
+      >
+        <div className="absolute inset-0 flex items-center justify-center group">
+          {/* Curved text */}
+          <div className="absolute inset-0" style={textRevealStyle(1)}>
+            <div
+              className="
+                absolute inset-0
+                transition-all duration-300
+                group-hover:opacity-0
+                group-hover:scale-90
+              "
+            >
+              <CurvedText text="✦ MUSIC ✦ PLAY ✦ PAUSE ✦ REWIND ✦ REPEAT" />
+            </div>
+          </div>
+
+          {/* TOP CARD */}
+          <MusicCard
+            src="/Assets/mp3/Sign-of-the-Times.mp3"
+            bgImage="/Assets/mp3/Sign-of-the-Times-cover.png"
+            heading="Sign of the  Times"
+            currentSong={currentSong}
+            play={play}
+            setCurrentSong={setCurrentSong}
+            setPlay={setPlay}
+            className="
+              -top-[110px]
+              left-1/2
+              -translate-x-1/2
+            "
+          />
+
+          {/* RIGHT CARD */}
+          <MusicCard
+            src="/Assets/mp3/Marakkavillayae.mp3"
+            bgImage="/Assets/mp3/Marakkavillayae-cover.png"
+            heading="Marakkavillayae"
+            currentSong={currentSong}
+            play={play}
+            setCurrentSong={setCurrentSong}
+            setPlay={setPlay}
+            className="
+              -right-[110px]
+              top-1/2
+              -translate-y-1/2
+              delay-75
+            "
+          />
+
+          {/* BOTTOM CARD */}
+          <MusicCard
+            src="/Assets/mp3/glorious-purpose.mp3"
+            bgImage="/Assets/mp3/glorious-purpose-cover.png"
+            heading="Purpose is Glorious"
+            currentSong={currentSong}
+            play={play}
+            setCurrentSong={setCurrentSong}
+            setPlay={setPlay}
+            className="
+              -bottom-[110px]
+              left-1/2
+              -translate-x-1/2
+              delay-150
+            "
+          />
+
+          {/* LEFT CARD */}
+          <MusicCard
+            src="/Assets/mp3/aaro-nenjil.mp3"
+            bgImage="/Assets/mp3/aaro-nenjil-cover.png"
+            heading="Aaro Nenjil"
+            currentSong={currentSong}
+            play={play}
+            setCurrentSong={setCurrentSong}
+            setPlay={setPlay}
+            className="
+              -left-[110px]
+              top-1/2
+              -translate-y-1/2
+              delay-200
+            "
+          />
+
+          {/* HEADPHONE */}
+          <Image
+            src="/Assets/Intro/headphone.png"
+            width={150}
+            height={100}
+            alt="headphones"
+            className="
+              relative
+              z-20
+              rotate-[349deg]
+              transition-transform
+              duration-300
+              group-hover:scale-105
+            "
+          />
+        </div>
+      </div>
+
+      {/* ===================== MP3 PLAYER ===================== */}
+      <div
+        className="cursor-point pointer-events-none absolute left-[82%] -translate-x-1/2 w-[35vw] aspect-[4/2]"
+        style={popStyle(2)}
+      >
+        {/* MP3 background */}
+        <Image
+          src="/Assets/Intro/mp3-background-1.png"
+          alt="mp3 player"
+          fill
+          className="object-contain"
+        />
+
+        {/* Vinyl */}
+        <Image
+          src="/Assets/Intro/vinyl-disc.png"
+          alt="vinyl disc"
+          width={150}
+          height={100}
+          className={`
+            absolute
+            left-[35%]
+            top-[15%]
+            w-[25%]
+            h-auto
+            transition-all duration-700
+            ${play ? "animate-spin" : ""}
+          `}
+        />
+
+        <Image
+          src="/Assets/Intro/needle.png"
+          alt="needle"
+          width={250}
+          height={100}
+          className={`
+            absolute
+            left-[44%]
+            top-[-15%]
+            w-[32.5%]
+            h-auto
+            transition-transform duration-300
+            ${play ? "rotate-10" : "-rotate-20"}
+          `}
+        />
+
+        {/* Pause */}
+        <Image
+          src="/Assets/Intro/pause-button.png"
+          alt="pause"
+          width={50}
+          height={100}
+          className={`
+            pointer-events-auto
+            absolute
+            left-[35%]
+            top-[73%]
+            w-[8%]
+            h-auto
+            cursor-pointer
+            ${play ? "scale-100" : "scale-90 invert"}
+          `}
+          onClick={() => setPlay(false)}
+        />
+
+        {/* Play */}
+        <Image
+          src="/Assets/Intro/play-button.png"
+          alt="play"
+          width={50}
+          height={100}
+          className={`
+            pointer-events-auto
+            absolute
+            left-[44%]
+            top-[73%]
+            w-[8%]
+            h-auto
+            cursor-pointer
+            transition-transform duration-200
+            ${play ? "scale-90 invert" : "scale-100"}
+          `}
+          onClick={() => setPlay(true)}
+        />
+      </div>
+    </div>
 
         
       </section>

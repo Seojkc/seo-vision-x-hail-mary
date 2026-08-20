@@ -87,11 +87,11 @@ function TypewriterHeading() {
   return (
     <h1
       ref={ref}
-      className="relative z-10 bree-serif-regular text-[4vw] my-[4vw] text-[#C4C4C4] p-[30px] grid grid-cols-[1fr_auto_1fr] items-center"
+      className="relative z-10 text-[4vw] my-[4vw] text-[#C4C4C4] p-[30px] grid grid-cols-[1fr_auto_1fr] items-center"
     >
       <span className="text-right whitespace-pre">
         {leftBlack}
-        <span className="text-[#ff0000]">{leftRed}</span>
+        <span className=" text-elegant-red">{leftRed}</span>
       </span>
 
       <span className="mx-4 md:mx-6">|</span>
@@ -104,29 +104,39 @@ function TypewriterHeading() {
 /* =========================================================================
    PAGE
    -------------------------------------------------------------------------
-   Everything project-related now lives directly in Projects(): the two
-   project objects, the pinned-scroll math, and both detail cards written
-   out by hand (no shared <ProjectDetailsCard/>, no .map()). That's on
-   purpose — each card can now grow its own one-off markup / elements
-   without touching the other one.
+   Scroll behaviour (per reference diagram):
 
-   Scroll behaviour:
      - Project 1 scrolls in normally at first (no effects).
      - Once the section's sticky layer hits the top of the viewport, the
-       background pins and further scroll drives progress 0 -> 1:
-         EXIT  (0 -> EXIT_END)   card 1 image fades/blurs/lifts out,
-                                  card 1 details tilt into a 3D card,
-                                  scale to 90%, then slide right while
-                                  scaling down to 0%.
-         ENTER (EXIT_END -> 1)   card 2 image settles in, card 2 details
-                                  rise from below at 60% scale, arrive at
-                                  the card-1 slot at 90%, then settle to
-                                  100%.
+       background pins and further scroll drives progress 0 -> 1, split
+       into four phases:
+
+         PHASE A (0 -> P1_END)
+           Project 1 scales down from 1 -> 0.4, staying centered and
+           fully opaque. This is the "shrink to center" step.
+
+         PHASE B (P1_END -> P2_END)
+           Both cards sit at scale 0.4 in the same centered slot.
+           Project 1 fades opacity 1 -> 0 (and drifts up slightly).
+           Project 2 fades opacity 0 -> 1 (and rises up from below into
+           the same slot). This is the crossfade/swap step.
+
+         PHASE C (P2_END -> P3_END)
+           Project 2 grows from scale 0.4 -> 1, opacity held at 1,
+           arriving at its final full-size resting position.
+
+         PHASE D (P3_END -> 1)
+           Project 2 just holds at its final position. This is pure
+           scroll buffer so the pin doesn't release the instant project 2
+           arrives, which would read as a skipped/cut transition.
+
      - When progress hits 1 the wrapper's extra scroll height runs out and
        the sticky layer releases — "background fix ends" here, right back
        into the same #0c0c0c background so there's no flash to a lighter
-       page background underneath (see note at the bottom of the file if
-       you still see a blank flash after this component).
+       page background underneath.
+
+     This same 4-phase timeline drives BOTH the image half and the
+     details half, so they move in lockstep.
    ========================================================================= */
 
 export default function Projects() {
@@ -207,51 +217,56 @@ export default function Projects() {
     };
   }, []);
 
-  /* ---- phase split ---- */
-  const EXIT_END = 0.45; // fraction of the pinned scroll spent exiting card 1
-  const exitT = clamp01(progress / EXIT_END);
-  const enterT = clamp01((progress - EXIT_END) / (1 - EXIT_END));
+  /* ---- 4-phase timeline (see comment block above) ---- */
+  const P1_END = 0.28; // shrink-to-center ends
+  const P2_END = 0.58; // crossfade ends
+  const P3_END = 0.85; // grow-to-final ends, hold begins
 
-  /* ---- card 1 (exiting) ---- */
-  const SHRINK_END = 0.3; // portion of exitT spent shrinking to 90% before it moves
-  const shrinkT = clamp01(exitT / SHRINK_END);
-  const moveT = clamp01((exitT - SHRINK_END) / (1 - SHRINK_END));
+  const SHRINK_SCALE = 0.4; // scale both cards sit at during the crossfade
 
-  const c1Scale = moveT > 0 ? lerp(0.9, 0, moveT) : lerp(1, 0.9, shrinkT);
-  const c1RotateY = lerp(0, 8, shrinkT) + lerp(0, 22, moveT);
-  const c1TranslateX = lerp(0, 70, moveT); // vw, slides right on exit
-  const c1Opacity = moveT > 0 ? lerp(1, 0, moveT) : 1;
+  function computeStates(t) {
+    // defaults: project1 fully visible/full-size, project2 hidden/small-below
+    let p1 = { scale: 1, opacity: 1, translateY: 0 };
+    let p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: 20 };
 
-  const img1Opacity = clamp01(1 - (exitT - 0.35) / 0.65); // holds fully visible until ~35% of exit, then fades
-  const img1Scale = lerp(1, 0.75, exitT); // shrinks back, reads as moving away from camera
-  const img1Blur = lerp(0, 6, clamp01((exitT - 0.2) / 0.8)); // soft focus pull as it recedes
-  const img1TranslateY = lerp(0, -3, exitT); // slight lift back, not sideways
-  
-  // CARD 2 — rises up from below into final resting position
-  const img2Opacity = clamp01((enterT - 0.1) / 0.5);
-  const img2Scale = lerp(0.8, 1, clamp01(enterT / 0.85)); // arrives at full scale near the end
-  const img2Blur = lerp(4, 0, clamp01(enterT / 0.5));
-  const img2TranslateY = lerp(28, 0, clamp01(enterT / 0.85));
+    if (t <= P1_END) {
+      // PHASE A — project 1 shrinks toward center
+      const a = clamp01(t / P1_END);
+      p1 = { scale: lerp(1, SHRINK_SCALE, a), opacity: 1, translateY: 0 };
+      p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: 20 };
+    } else if (t <= P2_END) {
+      // PHASE B — crossfade/swap at the shrunk scale
+      const b = clamp01((t - P1_END) / (P2_END - P1_END));
+      p1 = {
+        scale: SHRINK_SCALE,
+        opacity: lerp(1, 0, b),
+        translateY: lerp(0, -12, b),
+      };
+      p2 = {
+        scale: SHRINK_SCALE,
+        opacity: lerp(0, 1, b),
+        translateY: lerp(20, 0, b),
+      };
+    } else if (t <= P3_END) {
+      // PHASE C — project 2 grows up to its final position
+      const c = clamp01((t - P2_END) / (P3_END - P2_END));
+      p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -12 };
+      p2 = { scale: lerp(SHRINK_SCALE, 1, c), opacity: 1, translateY: 0 };
+    } else {
+      // PHASE D — hold at final position (scroll buffer)
+      p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -12 };
+      p2 = { scale: 1, opacity: 1, translateY: 0 };
+    }
 
-  /* ---- card 2 (entering) ---- */
-  const RISE_END = 0.6; // portion of enterT spent rising into the card-1 slot
-  const riseT = clamp01(enterT / RISE_END);
-  const settleT = clamp01((enterT - RISE_END) / (1 - RISE_END));
+    return { p1, p2 };
+  }
 
-  const c2Scale = settleT > 0 ? lerp(0.9, 1, settleT) : lerp(0.6, 0.9, riseT);
-  const c2TranslateY = lerp(35, 0, riseT); // vh, rises up from below
-  const c2RotateY = lerp(-14, 0, riseT);
-  const c2Opacity = clamp01(enterT / 0.25); // fades in quickly at the start of enter
-
-
-
-
-  
+  const { p1, p2 } = computeStates(progress);
 
   /* ---- hover state, one per card ---- */
   const [hovered1, setHovered1] = useState(false);
   const [hovered2, setHovered2] = useState(false);
-  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
+  const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
 
   return (
     <div className="bg-[#0c0c0c] min-h-screen pb-[10vh]">
@@ -267,18 +282,18 @@ export default function Projects() {
       </div>
 
       {/* ================= PINNED SCROLL STACK (inlined) ================= */}
-      <section ref={wrapperRef} className="relative bg-[#0c0c0c]" style={{ height: "300vh" }}>
-      <div
-        className="h-screen overflow-hidden bg-[#0c0c0c]"
-        style={{
-          perspective: "1600px",
-          position: pinState === "pinned" ? "fixed" : "absolute",
-          top: pinState === "after" ? "auto" : 0,
-          bottom: pinState === "after" ? 0 : "auto",
-          left: 0,
-          right: 0,
-        }}
-      >
+      <section ref={wrapperRef} className="relative bg-[#0c0c0c]" style={{ height: "400vh" }}>
+        <div
+          className="h-screen overflow-hidden bg-[#0c0c0c]"
+          style={{
+            perspective: "1600px",
+            position: pinState === "pinned" ? "fixed" : "absolute",
+            top: pinState === "after" ? "auto" : 0,
+            bottom: pinState === "after" ? 0 : "auto",
+            left: 0,
+            right: 0,
+          }}
+        >
           {/* dotted grid background — stays put for the whole pin */}
           <div
             className="pointer-events-none absolute inset-0"
@@ -310,63 +325,60 @@ export default function Projects() {
           <div className="relative z-10 h-full flex flex-col md:flex-row items-center px-6 md:px-16">
             {/* ---- IMAGE (always left) ---- */}
             <div className="relative w-full md:w-[35%] h-[38vh] md:h-[70vh] flex items-center justify-center shrink-0">
-            {/* CARD 1 IMAGE — stays, then recedes back */}
-            <div
-              className="absolute inset-0 flex items-center justify-center p-5"
-              style={{
-                opacity: img1Opacity,
-                transform: `translateY(${img1TranslateY}vh) scale(${img1Scale})`,
-                filter: `blur(${img1Blur}px)`,
-                willChange: "transform, opacity",
-              }}
-            >
-              <Image
-                alt={project1.title}
-                width={1080}
-                height={1080}
-                className="w-full h-auto"
-                src={project1.image}
-              />
-            </div>
-
-            {/* CARD 2 IMAGE — rises from below into final position */}
-            <div
-              className="absolute inset-0 flex items-center justify-center p-5"
-              style={{
-                opacity: img2Opacity,
-                transform: `translateY(${img2TranslateY}vh) scale(${img2Scale})`,
-                filter: `blur(${img2Blur}px)`,
-                willChange: "transform, opacity",
-              }}
-            >
-              <Image
-                alt={project2.title}
-                width={1080}
-                height={1080}
-                className="w-full h-auto"
-                src={project2.image}
-              />
-            </div>
-          </div>
-
-            {/* ---- DETAILS (always right) ---- */}
-            <div className="relative flex-1 w-full h-[42vh] md:h-[70vh]" style={{ transformStyle: "preserve-3d" }}>
-              {/* ===== CARD 1 — Money Compass (manual, exiting) ===== */}
+              {/* CARD 1 IMAGE */}
               <div
-                className="absolute inset-0 flex items-center z-10"
+                className="absolute inset-0 flex items-center justify-center p-5"
                 style={{
-                  opacity: c1Opacity,
-                  transform: `translateX(${c1TranslateX}vw) scale(${Math.max(c1Scale, 0)}) rotateY(${c1RotateY}deg)`,
-                  transformStyle: "preserve-3d",
+                  opacity: p1.opacity,
+                  transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
                   willChange: "transform, opacity",
                 }}
               >
-                <a
-                  href={project1.href}
+                <Image
+                  alt={project1.title}
+                  width={1080}
+                  height={1080}
+                  className="w-full h-auto"
+                  src={project1.image}
+                />
+              </div>
+
+              {/* CARD 2 IMAGE */}
+              <div
+                className="absolute inset-0 flex items-center justify-center p-5"
+                style={{
+                  opacity: p2.opacity,
+                  transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
+                  willChange: "transform, opacity",
+                }}
+              >
+                <Image
+                  alt={project2.title}
+                  width={1080}
+                  height={1080}
+                  className="w-full h-auto"
+                  src={project2.image}
+                />
+              </div>
+            </div>
+
+            {/* ---- DETAILS (always right) ---- */}
+            <div className="relative flex-1 w-full h-[42vh] md:h-[70vh]">
+              {/* ===== CARD 1 — Money Compass ===== */}
+              <div
+                className="absolute inset-0 flex items-center z-10"
+                style={{
+                  opacity: p1.opacity,
+                  transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
+                  willChange: "transform, opacity",
+                }}
+              >
+                
+               <a href={project1.href}
                   onMouseEnter={() => setHovered1(true)}
                   onMouseLeave={() => setHovered1(false)}
-                  className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full"
-                >
+                  className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full">
+
                   <span
                     className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5"
                     style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }}
@@ -403,9 +415,11 @@ export default function Projects() {
                       {project1.title}
                     </h3>
 
-                    <p ref={headingRef}
-                       className={`reveal-wipe ${headingVisible ? "is-visible" : ""}  
-                       mt-2 pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1`}>
+                    <p
+                      ref={headingRef}
+                      className={`reveal-wipe ${headingVisible ? "is-visible" : ""}
+                       mt-2 pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1`}
+                    >
                       {project1.desc}
                     </p>
 
@@ -430,18 +444,17 @@ export default function Projects() {
                 </a>
               </div>
 
-              {/* ===== CARD 2 — Arrive Alert (manual, entering) ===== */}
+              {/* ===== CARD 2 — Arrive Alert ===== */}
               <div
                 className="absolute inset-0 flex items-center z-20"
                 style={{
-                  opacity: c2Opacity,
-                  transform: `translateY(${c2TranslateY}vh) scale(${c2Scale}) rotateY(${c2RotateY}deg)`,
-                  transformStyle: "preserve-3d",
+                  opacity: p2.opacity,
+                  transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
                   willChange: "transform, opacity",
                 }}
               >
-                <a
-                  href={project2.href}
+                
+                <a  href={project2.href}
                   onMouseEnter={() => setHovered2(true)}
                   onMouseLeave={() => setHovered2(false)}
                   className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full"

@@ -330,12 +330,14 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-elegant-red: var(--elegant-red);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #e6e6e6;
+    --elegant-red: #E90000   ;
   }
 }
 
@@ -382,6 +384,7 @@ body {
     transform: rotate(360deg);
   }
 }
+
 
 
 .reveal-wipe {

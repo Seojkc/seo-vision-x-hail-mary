@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import AstrophageField from "./AstrophageField";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { skillCategories } from "./skills-data"; // ---- Skill categories ----
 
 // shared spring-like easing -- slight overshoot on the way in, gives a "pop"
@@ -10,26 +10,113 @@ const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
 // smooth deceleration for the row's own expand/collapse -- no overshoot here,
 // since a bouncy padding change looks janky rather than lively
 const EXPAND_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+// pure ease-in for the planet's grow + spin -- starts slow, accelerates,
+// reads as something with real mass settling into place
+const EASE_IN = "cubic-bezier(0.25, 0, 1, 0.45)";
 
 // fades the particle field to transparent smoothly from center to edges,
 // instead of letting particles get hard-clipped at the canvas's rectangular bounds
 const PARTICLE_FADE_MASK =
   "radial-gradient(circle at center, black 30%, transparent 72%)";
 
-
 const BGSRC = ["/Assets/comets-skills.png","/Assets/birds-skills.png","/Assets/flowers-skills.png","/Assets/fishs-skills.png"];
+
+// ---- timing ----
+// heading slides in + rises first; the planet grows/spins alongside it;
+// the skill rows only start their own slide-in once the heading's
+// animation has essentially finished, so it reads as two clear beats
+// instead of everything arriving at once
+const HEADING_DURATION = 600;
+const PLANET_DURATION = 500;
+const PLANET_DELAY = 150; // starts just after the heading begins, not simultaneous
+
+const ROWS_START_DELAY = HEADING_DURATION - 150; // rows begin just before heading fully settles, feels connected rather than dead-paused
+const ROW_DURATION = 700;
+const ROW_STAGGER = 90;
+
+// one-shot IntersectionObserver reveal hook
+function useReveal(threshold = 0.25) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, visible];
+}
 
 export default function Skills() {
   // drives the particle glow around the planet -- true while any category row is hovered
   const [isSkillHover, setIsSkillHover] = useState(false);
 
+  // one shared trigger for the whole section's entrance choreography
+  const [sectionRef, sectionVisible] = useReveal(0.2);
+
+  const HEADING_TEXT = "Skills"; // "Skill" + red "s" combined
+
+  const letterStyle = (i) => ({
+    opacity: sectionVisible ? 1 : 0,
+    transform: sectionVisible ? "translate(0px, 0px)" : "translate(0px, 110px)",
+    transitionProperty: "transform, opacity",
+    transitionDuration: `${HEADING_DURATION}ms`,
+    transitionDelay: `${i * 200}ms`,
+    transitionTimingFunction: SPRING_EASE,
+    willChange: "transform, opacity",
+    display: "inline-block",
+  });
+
+
+  const planetStyle = {
+    opacity: sectionVisible ? 1 : 0,
+    transform: sectionVisible
+      ? "translate(0px, 0px)"
+      : " translate(0px, 110px) ",
+    transformOrigin: "center center",
+    transitionProperty: "transform, opacity",
+    transitionDuration: `${PLANET_DURATION}ms`,
+    transitionDelay: `${PLANET_DELAY}ms`,
+    willChange: "transform, opacity",
+  };
+
+  const rowStyle = (i) => ({
+    opacity: sectionVisible ? 1 : 0,
+    transform: sectionVisible
+      ? "translate(0px, 0px)" : "translate(0px, 110px)",
+    transitionProperty: "transform, opacity",
+    transitionDuration: `${ROW_DURATION}ms`,
+    transitionTimingFunction: SPRING_EASE,
+    transitionDelay: `${ROWS_START_DELAY + i * ROW_STAGGER}ms`,
+    willChange: "transform, opacity",
+  });
+
   return (
     <>
-      <div className="h-[100vh] relative bg-[#0c0c0c] ">
+      <div ref={sectionRef} className="h-[100vh] relative bg-[#0c0c0c] ">
         <div className="h-[50%] bg-[#0c0c0c]">
-          <h1 className="text-[20vh] h-full text-[#F2F0EF]  pl-[3%] flex items-end self-end">
-            Skill <span className="text-[#ff0000]">s</span> 
-          </h1>
+        <h1 className="text-[20vh] h-full pl-[3%] flex items-end self-end">
+          {HEADING_TEXT.split("").map((letter, i) => (
+            <span
+              key={i}
+              style={letterStyle(i)}
+              className={i === HEADING_TEXT.length - 1 ? "text-elegant-red" : undefined}
+            >
+              {letter}
+            </span>
+          ))}
+        </h1>
         </div>
 
         {/* planet + a small, contained particle field emitting from behind it --
@@ -54,6 +141,7 @@ export default function Skills() {
             alt="fun-fact-note"
             src="/Assets/adrian-planet.png"
             className="absolute inset-0 m-auto w-[80%] h-auto z-10"
+            style={planetStyle}
           />
         </div>
 
@@ -69,9 +157,8 @@ export default function Skills() {
                   onMouseLeave={() => setIsSkillHover(false)}
                   className="group relative overflow-hidden border-b border-black/10 py-[1.4vh] last:border-none hover:py-[5vh] hover:border-black/30"
                   style={{
-                    transitionProperty: "padding, border-color",
-                    transitionDuration: "650ms",
-                    transitionTimingFunction: EXPAND_EASE,
+                    ...rowStyle(i),
+                    transitionProperty: `${rowStyle(i).transitionProperty}, padding, border-color`,
                   }}
                 >
                   {/* row highlight sweep, grows in from the left behind everything */}
@@ -85,7 +172,7 @@ export default function Skills() {
                       transitionTimingFunction: EXPAND_EASE,
                       backgroundImage: `url(${BGSRC[i]})`,
                       backgroundRepeat: "repeat-x",
-                      backgroundPosition: "left bottom",
+                      backgroundPosition: " bottom",
                       backgroundSize: "auto 100%",
                       maskImage:
                         "linear-gradient(to right, transparent 0%, black 30%,black 40%, transparent 80%)",
