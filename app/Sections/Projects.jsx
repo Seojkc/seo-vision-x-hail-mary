@@ -96,7 +96,8 @@ function TypewriterHeading() {
 
       <span className="mx-4 md:mx-6">|</span>
 
-      <span className="text-left whitespace-pre">{rightRevealed}</span>
+      <span className="text-left whitespace-pre">{rightRevealed}</span> 
+     
     </h1>
   );
 }

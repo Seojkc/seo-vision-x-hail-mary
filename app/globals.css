@@ -10,7 +10,7 @@
 @import "tailwindcss";
 
 
-body {
+.outer-body {
   cursor: url('../public/Assets/astronaut-cursor-64.png') 4 4, auto !important;
 }
 

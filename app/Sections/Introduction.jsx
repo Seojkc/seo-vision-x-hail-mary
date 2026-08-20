@@ -320,11 +320,33 @@ export default function Introduction() {
   // custom "hover the icons" cursor bubble, follows the mouse anywhere over the section
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [showCursor, setShowCursor] = useState(false);
+  const sectionRef = useRef(null); // NEW — needed to check bounds on scroll
 
   const handleSectionMouseMove = (e) => {
     setCursorPos({ x: e.clientX, y: e.clientY });
   };
 
+  // mouseenter/mouseleave never fire on scroll, only on pointer movement —
+  // so if the user scrolls past this section with the mouse held still,
+  // showCursor stays stuck `true` and the bubble floats over whatever
+  // section scrolled up underneath it. This watches scroll directly and
+  // hides the bubble the moment the last known cursor position falls
+  // outside the section's current bounding box.
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const inside =
+        cursorPos.x >= rect.left &&
+        cursorPos.x <= rect.right &&
+        cursorPos.y >= rect.top &&
+        cursorPos.y <= rect.bottom;
+      if (!inside) setShowCursor(false);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [cursorPos]);
 
   const [rowRef, rowVisible] = useScrollReveal({ threshold: 0.2 });
 
@@ -334,7 +356,7 @@ export default function Introduction() {
 
   const popStyle = (i) => ({
     opacity: rowVisible ? 1 : 0,
-    transform: rowVisible ? "translateY(0px)" : "translateY(70px)",
+    transform: rowVisible ? "translateY(0px) scale(1)" : "translateY(120px)  scale(0)",
     transitionProperty: "transform, opacity",
     transitionDuration: `${POP_DURATION}ms`,
     transitionTimingFunction: POP_EASE,
@@ -352,7 +374,7 @@ export default function Introduction() {
     transitionDelay: `${textDelay(i)}ms`,
     willChange: "transform, opacity",
   });
-  
+
   
 
   // track which song is actually loaded into the <audio> element right now,
@@ -400,6 +422,7 @@ export default function Introduction() {
   return (
     <>
       <section
+        ref={sectionRef}
         className="relative w-full h-auto overflow-hidden border-top-cardboard cursor-none"
         onMouseMove={handleSectionMouseMove}
         onMouseEnter={() => setShowCursor(true)}

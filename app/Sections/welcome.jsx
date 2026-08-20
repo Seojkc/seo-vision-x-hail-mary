@@ -3,8 +3,8 @@
 import React, { useEffect, useRef } from "react";
 import Navbar from "./navbar";
 import Image from "next/image";
-import TypeHeading from "../Components/typeheading"
-import TypingSequence from "../Components/Typingsequence";
+
+import useScrollReveal from "../Components/useScrollReveal"
 
 
 
@@ -34,6 +34,7 @@ export default function Welcome() {
     const pathRef = useRef(null);   // svg path driving the mask shape
     const glowRef = useRef(null);   // specular highlight overlay
     const rafId = useRef(null);
+    const [seoRef, seoVisible] = useScrollReveal({ threshold: 0.2 });
 
     const mouse = useRef({ x: -9999, y: -9999 });
     const active = useRef(false);
@@ -62,7 +63,14 @@ export default function Welcome() {
     const BACK_PINCH = 0.35;      // tapers a tail opposite the motion
     const AMBIENT_BASE = 3;       // idle ripple size (water never fully still)
     const AMBIENT_SPEED_GAIN = 0.9;
-
+    const seoStyle = {
+        opacity: seoVisible ? 1 : 0,
+        transform: seoVisible ? "translateY(0px)" : "translateY(220px)",
+        transitionProperty: "transform, opacity",
+        transitionDuration: "1500ms",
+        transitionTimingFunction: "cubic-bezier(0.36, 1, 0.5, 1)", // POP_EASE — matches the rest of the section
+        willChange: "transform, opacity",
+      };
     useEffect(() => {
         const section = sectionRef.current;
         const maskEl = maskRef.current;
@@ -172,23 +180,24 @@ export default function Welcome() {
                 <Navbar />
             </div>
 
-            <video
-                src="/Assets/adrian-video.mp4"
-                ref={videoRef}
-                autoPlay
-                muted
-                loop
-                playsInline
-                onEnded={(e) => {
-                    e.currentTarget.currentTime = 0;
-                    e.currentTarget.play();
-                  }}
-                className="absolute inset-0 h-full w-full object-cover opacity-90"
-                />
+            <Image
+           
+                src="/Assets/adrian-planet-1.png"
+                alt="face"
+                width={1800}
+                height={900}
+                className="
+                absolute w-[75%]
+                bottom-[5%] left-[50%]
+                -translate-x-1/2 translate-y-1/2
+                opacity-90
+                drop-shadow-[0_0_150px_rgba(2_140_0_/_0.8)]
+              "
+            />
 
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/90" />
 
-            {/* SVG mask: a soft-edged organic blob that morphs with mouse movement */}
+            {/* SVG mask: a soft-edged organic blob that morphs with mouse movement  */ }
             <svg width="0" height="0" style={{ position: "absolute" }}>
                 <defs>
                     <filter id="droplet-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -241,15 +250,16 @@ export default function Welcome() {
                 </div>
                 
             </div>
-            <div className="absolute  agdasima-regular" style={{ opacity:1}}>
-            <TypingSequence
-                items={[
-                    { text: "SEO JAMES", className: "text-[18vw]  font-bold  mt-60 mx-80 scaleY-15 glass-heading" },
-                    
-                ]}
-                speed={80}
-                />
-                    
+            <div
+            ref={seoRef}
+            className="absolute inset-x-0 top-0 h-[90%] px-5 flex items-center justify-center agdasima-regular"
+            style={seoStyle}>
+
+                <h1 className="w-full text-center text-[18vw] font-bold scaleY-15 glass-heading">
+                    <span className="max-[600px]:hidden">SEO JAMES</span>
+                    <span className="hidden max-[600px]:inline">SEO</span>
+                </h1>
+
             </div>
 
             
