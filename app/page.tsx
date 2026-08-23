@@ -7,7 +7,7 @@ import Skills from './Sections/Skills';
 import Projects from './Sections/Projects';
 import GithubSection from './Sections/github';
 import Navbar from "./Sections/navbar";
-
+import Contacts from "./Sections/Contacts";
 
 export default function Home() {
   return (
@@ -24,6 +24,8 @@ export default function Home() {
       <div data-navbar-theme="light"><Funfacts /></div>
       <div data-navbar-theme="light"><GithubSection /></div>
       <div data-navbar-theme="dark" id="Playgound"><Theory /></div>
+      <div data-navbar-theme="dark" id="contact"><Contacts /></div>
+
     </div>
   );
 }

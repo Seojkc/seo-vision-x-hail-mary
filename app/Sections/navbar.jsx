@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 
 const navLinks = [
-  { label: "Projects", href: "#Projects" },
-  { label: "Skills", href: "#Skills" },
-  { label: "Playgound", href: "#Playgound" },
-  { label: "Contact", href: "#contact" },
+  { label: "Work", href: "#Projects" },
+  { label: "Toolkit", href: "#Skills" },
+  { label: "Lab", href: "#Playgound" },
+  { label: "Let's Talk ☺️", href: "#contact" },
 ];
 
 
@@ -151,25 +151,25 @@ export default function Navbar() {
           "transition-colors duration-500",
         ].join(" ")}
       >
-        <nav className="mx-auto flex h-20 max-w-6xl items-center justify-center px-6">
-          <ul className="hidden items-center gap-[60px] md:flex">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                
-                <a  href={link.href}
-                  className={[
-                    "text-[18px] font-medium transition-colors duration-500",
-                    isLight
-                      ? "text-black/60 hover:text-black"
-                      : "text-white/60 hover:text-white",
-                  ].join(" ")}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+<nav className="mx-auto flex h-20 items-center justify-center px-6">
+  <ul className="hidden items-center gap-[60px] md:flex">
+    {navLinks.map((link) => (
+      <li key={link.href}>
+        
+        <a  href={link.href}
+          className={[
+            "block px-2 py-3 text-[18px] whitespace-nowrap font-medium transition-colors duration-500",
+            isLight
+              ? "text-black/80 hover:text-black"
+              : "text-white/80 hover:text-white",
+          ].join(" ")}
+        >
+          {link.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
       </div>
     </header>
   );
