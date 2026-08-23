@@ -463,6 +463,24 @@ function renderLetters(text, startIndex, visible) {
     <>
       <div ref={boundaryRef} className="relative h-[70rem] overflow-hidden ">
         <NetBackground attractors={attractors} />
+        <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "linear-gradient(to bottom,black, transparent 10%, transparent)" }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "linear-gradient(to right,black, transparent 10%, transparent)" }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "linear-gradient(to top,black, transparent 10%, transparent)" }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "linear-gradient(to left,black, transparent 10%, transparent)" }}
+          />
+
+
 
 
 
