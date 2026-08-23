@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Navbar from "./navbar";
 import Image from "next/image";
 
@@ -29,12 +29,20 @@ function pointsToPath(points) {
 }
 
 export default function Welcome() {
-    const sectionRef = useRef(null);
-    const maskRef = useRef(null);   // masked image (facemask)
-    const pathRef = useRef(null);   // svg path driving the mask shape
-    const glowRef = useRef(null);   // specular highlight overlay
+    const wrapperRef = useRef(null);  // outer container — defines the section's box in normal flow
+    const maskRef = useRef(null);     // masked image (facemask)
+    const pathRef = useRef(null);     // svg path driving the mask shape
+    const glowRef = useRef(null);     // specular highlight overlay
     const rafId = useRef(null);
     const [seoRef, seoVisible] = useScrollReveal({ threshold: 0.2 });
+
+    // true while the section is still in view (or hasn't been reached yet) —
+    // the background layer is `fixed` in this state. Once the wrapper's
+    // bottom edge passes the top of the viewport, this flips to false and
+    // the layer switches to `absolute`, permanently detaching it — it can
+    // never bleed into later sections again because from that point on it's
+    // just ordinary content sitting inside wrapperRef's own box.
+    const [pinned, setPinned] = useState(true);
 
     const mouse = useRef({ x: -9999, y: -9999 });
     const active = useRef(false);
@@ -71,12 +79,29 @@ export default function Welcome() {
         transitionTimingFunction: "cubic-bezier(0.36, 1, 0.5, 1)", // POP_EASE — matches the rest of the section
         willChange: "transform, opacity",
       };
+
+    // Scroll-position toggle — same pattern as Navbar/Logo's own scroll
+    // listeners, just watching the wrapper's bottom edge instead of a
+    // fixed scrollY threshold.
     useEffect(() => {
-        const section = sectionRef.current;
+        const handleScroll = () => {
+            if (!wrapperRef.current) return;
+            const rect = wrapperRef.current.getBoundingClientRect();
+            // still pinned as long as the wrapper's bottom hasn't reached
+            // the top of the viewport yet
+            setPinned(rect.bottom > 0);
+        };
+
+        handleScroll();
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    useEffect(() => {
         const maskEl = maskRef.current;
         const pathEl = pathRef.current;
         const glowEl = glowRef.current;
-        if (!section || !maskEl || !pathEl) return;
+        if (!maskEl || !pathEl) return;
 
         let t = 0;
         let lastSpeed = 0;
@@ -91,8 +116,8 @@ export default function Welcome() {
             active.current = false;
         };
 
-        section.addEventListener("mousemove", handleMove);
-        section.addEventListener("mouseleave", handleLeave);
+        window.addEventListener("mousemove", handleMove);
+        window.addEventListener("mouseleave", handleLeave);
 
         const animate = () => {
             t += 1;
@@ -155,8 +180,8 @@ export default function Welcome() {
         rafId.current = requestAnimationFrame(animate);
 
         return () => {
-            section.removeEventListener("mousemove", handleMove);
-            section.removeEventListener("mouseleave", handleLeave);
+            window.removeEventListener("mousemove", handleMove);
+            window.removeEventListener("mouseleave", handleLeave);
             cancelAnimationFrame(rafId.current);
         };
     }, []);
@@ -175,29 +200,74 @@ export default function Welcome() {
 
 
     return (
-        <section ref={sectionRef} id="home" className="relative min-h-screen overflow-hidden">
-            <div className="absolute inset-0 z-50">
-                <Navbar />
+        // Outer wrapper stays a plain h-screen block in normal document
+        // flow — this box is what the background layer detaches to once
+        // scrolled past, and what mouse tracking measures against.
+        <div ref={wrapperRef} id="home" className="relative h-screen w-full overflow-hidden">
+
+            {/* ---- BACKGROUND LAYER: navbar mount, gradient, planet, SEO text ----
+                 `fixed` while `pinned` is true (identical look/feel to true
+                 position:fixed — no sticky quirks). The instant the
+                 wrapper's bottom edge reaches the top of the viewport,
+                 this flips to `absolute bottom-0`, which lands on the
+                 exact same pixels (since the wrapper is exactly one
+                 viewport tall) — zero visual jump — and from then on it
+                 scrolls away with the wrapper like normal content,
+                 permanently, never reappearing behind later sections. */}
+            <div
+                className={
+                    pinned
+                        ? "fixed inset-x-0 top-0 h-screen z-0"
+                        : "absolute inset-x-0 bottom-0 h-screen z-0"
+                }
+            >
+                
+
+                <Image
+                    src="/Assets/adrian-planet-1.png"
+                    alt="face"
+                    width={2800}
+                    height={900}
+                    className="
+                        absolute w-[75%]
+                        bottom-[5%] left-[50%]
+                        -translate-x-1/2 translate-y-1/2
+                        opacity-95
+                        animate-pulse-glow
+                    "
+                />
+
+                <style jsx global>{`
+                  @keyframes pulseGlow {
+                    0%, 100% {
+                      filter: drop-shadow(0 0 80px rgba(18, 218, 0, 0.87));
+                    }
+                    50% {
+                      filter: drop-shadow(0 0 180px rgb(62, 219, 0));
+                    }
+                  }
+                  .animate-pulse-glow {
+                    animation: pulseGlow 5s ease-in-out infinite;
+                  }
+
+                  
+                `}</style>
+
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/90" />
+
+                <div
+                    ref={seoRef}
+                    className="absolute inset-x-0 top-0 h-[90%] px-5 flex items-center justify-center agdasima-regular"
+                    style={seoStyle}
+                >
+                    <h1 className="w-full text-center text-[18vw] font-bold scaleY-15 glass-heading">
+                        <span className="max-[600px]:hidden">SEO JAMES</span>
+                        <span className="hidden max-[600px]:inline">SEO</span>
+                    </h1>
+                </div>
             </div>
 
-            <Image
-           
-                src="/Assets/adrian-planet-1.png"
-                alt="face"
-                width={1800}
-                height={900}
-                className="
-                absolute w-[75%]
-                bottom-[5%] left-[50%]
-                -translate-x-1/2 translate-y-1/2
-                opacity-90
-                drop-shadow-[0_0_150px_rgba(2_140_0_/_0.8)]
-              "
-            />
-
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/90" />
-
-            {/* SVG mask: a soft-edged organic blob that morphs with mouse movement  */ }
+            {/* SVG mask def */}
             <svg width="0" height="0" style={{ position: "absolute" }}>
                 <defs>
                     <filter id="droplet-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -209,31 +279,33 @@ export default function Welcome() {
                 </defs>
             </svg>
 
-            <div className="pointer-events-none absolute bottom-0 left-1/2 z-10 -translate-x-1/2">
+            {/* ---- FACEMASK / mask3 (the "border bottom") ----
+                 Always normal-flow `absolute` against wrapperRef, exactly
+                 as in the original — this was never the source of the
+                 bleed-through, so it's untouched. It scrolls away with the
+                 wrapper naturally alongside the now-detached background. */}
+            <div className="pointer-events-none absolute -bottom-[2px] left-1/2 z-10 -translate-x-1/2">
                 <div className="relative w-[min(800px,85vw)]">
-                    {/* Base layer — always fully visible, unchanged */}
                     <Image
-                        src="/Assets/facemask1.png"
+                        src="/Assets/mask4.png"
                         alt="face"
                         width={800}
                         height={200}
-                        className="relative z-10 h-auto w-full object-contain object-bottom"
+                        className="relative  -bottom-[2px] z-10 h-auto w-full object-contain object-bottom"
                     />
 
-                    {/* Top layer — revealed only inside the droplet-shaped mask */}
                     <Image
                         ref={maskRef}
-                        src="/Assets/face.png"
+                        src="/Assets/face4.png"
                         alt="facemask"
                         width={800}
                         height={200}
-                        className="absolute bottom-0 right-0 z-20 h-auto w-full object-contain object-bottom"
+                        className="absolute -bottom-[2px] right-0 z-20 h-auto w-full object-contain object-bottom"
                         style={{
                             WebkitMaskImage: "url(#droplet-mask)",
                             maskImage: "url(#droplet-mask)",
                         }}
                     />
-                    
 
                     {/* Specular highlight — gives the reveal area a glossy "water surface" catch-light */}
                     <div
@@ -246,23 +318,8 @@ export default function Welcome() {
                             opacity: 0,
                         }}
                     />
-                    
                 </div>
-                
             </div>
-            <div
-            ref={seoRef}
-            className="absolute inset-x-0 top-0 h-[90%] px-5 flex items-center justify-center agdasima-regular"
-            style={seoStyle}>
-
-                <h1 className="w-full text-center text-[18vw] font-bold scaleY-15 glass-heading">
-                    <span className="max-[600px]:hidden">SEO JAMES</span>
-                    <span className="hidden max-[600px]:inline">SEO</span>
-                </h1>
-
-            </div>
-
-            
-        </section>
+        </div>
     );
 }

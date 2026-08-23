@@ -6,6 +6,7 @@ import PetrovaLines from "../Components/PetrovaLines";
 import CurvedText from "../Components/CurvedText";
 import useScrollReveal from "../Components/useScrollReveal"
 
+
 export function MusicCard({
   src,
   bgImage,
@@ -301,10 +302,10 @@ const TEXT_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)"; // slight overshoot, feel
 const POP_DURATION = 900;
 const POP_STAGGER = 160;
 
-// curved text starts once its group's pop-up is mostly settled, not at the
-// same instant -- reads as two deliberate beats instead of one blob of motion
 const TEXT_START_OFFSET = 550;
 const TEXT_DURATION = 750;
+
+
 
 export default function Introduction() {
 
@@ -375,18 +376,12 @@ export default function Introduction() {
     willChange: "transform, opacity",
   });
 
-  
-
-  // track which song is actually loaded into the <audio> element right now,
-  // so we know whether a song change happened vs just a play/pause toggle
   const loadedSongRef = useRef(null);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // guards against a stale async callback (from a previous click) touching
-    // the audio element after a newer click has already taken over
     let ignore = false;
 
     const songChanged = loadedSongRef.current !== currentSong;
@@ -449,6 +444,8 @@ export default function Introduction() {
           Hover the icons 🙂
         </div>
 
+
+       
         {/* actual audio element -- drives all the visual play/pause state above */}
         <audio ref={audioRef} src={currentSong} onEnded={() => setPlay(false)} />
 

@@ -218,48 +218,48 @@ export default function Projects() {
     };
   }, []);
 
-  /* ---- 4-phase timeline (see comment block above) ---- */
   const P1_END = 0.28; // shrink-to-center ends
-  const P2_END = 0.58; // crossfade ends
+  const P2_END = 0.48; // slide-swap ends
   const P3_END = 0.85; // grow-to-final ends, hold begins
-
-  const SHRINK_SCALE = 0.6; // scale both cards sit at during the crossfade
+  
+  const SHRINK_SCALE = 0.5;   // scale both cards sit at during the swap
+  const SLIDE_DISTANCE = 50;
 
   function computeStates(t) {
-    // defaults: project1 fully visible/full-size, project2 hidden/small-below
     let p1 = { scale: 1, opacity: 1, translateY: 0 };
-    let p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: 20 };
+  let p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: SLIDE_DISTANCE };
 
-    if (t <= P1_END) {
-      // PHASE A — project 1 shrinks toward center
-      const a = clamp01(t / P1_END);
-      p1 = { scale: lerp(1, SHRINK_SCALE, a), opacity: 1, translateY: 0 };
-      p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: 20 };
-    } else if (t <= P2_END) {
-      // PHASE B — crossfade/swap at the shrunk scale
-      const b = clamp01((t - P1_END) / (P2_END - P1_END));
-      p1 = {
-        scale: SHRINK_SCALE,
-        opacity: lerp(1, 0, b),
-        translateY: lerp(0, -12, b),
-      };
-      p2 = {
-        scale: SHRINK_SCALE,
-        opacity: lerp(0, 1, b),
-        translateY: lerp(20, 0, b),
-      };
-    } else if (t <= P3_END) {
-      // PHASE C — project 2 grows up to its final position
-      const c = clamp01((t - P2_END) / (P3_END - P2_END));
-      p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -12 };
-      p2 = { scale: lerp(SHRINK_SCALE, 1, c), opacity: 1, translateY: 0 };
-    } else {
-      // PHASE D — hold at final position (scroll buffer)
-      p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -12 };
-      p2 = { scale: 1, opacity: 1, translateY: 0 };
-    }
+  if (t <= P1_END) {
+    // PHASE A — project 1 shrinks toward center
+    const a = clamp01(t / P1_END);
+    p1 = { scale: lerp(1, SHRINK_SCALE, a), opacity: 1, translateY: 0 };
+    p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: SLIDE_DISTANCE };
+  } else if (t <= P2_END) {
+    // PHASE B — project 1 slides straight up and out while project 2
+    // slides straight up into place, at a constant SLIDE_DISTANCE apart
+    const b = clamp01((t - P1_END) / (P2_END - P1_END));
+    p1 = {
+      scale: SHRINK_SCALE,
+      opacity: 1,
+      translateY: lerp(0, -SLIDE_DISTANCE, b),
+    };
+    p2 = {
+      scale: SHRINK_SCALE,
+      opacity: 1,
+      translateY: lerp(SLIDE_DISTANCE, 0, b),
+    };
+  } else if (t <= P3_END) {
+    // PHASE C — project 2 grows up to its final position
+    const c = clamp01((t - P2_END) / (P3_END - P2_END));
+    p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -SLIDE_DISTANCE };
+    p2 = { scale: lerp(SHRINK_SCALE, 1, c), opacity: 1, translateY: 0 };
+  } else {
+    // PHASE D — hold at final position (scroll buffer)
+    p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -SLIDE_DISTANCE };
+    p2 = { scale: 1, opacity: 1, translateY: 0 };
+  }
 
-    return { p1, p2 };
+  return { p1, p2 };
   }
 
   const { p1, p2 } = computeStates(progress);
