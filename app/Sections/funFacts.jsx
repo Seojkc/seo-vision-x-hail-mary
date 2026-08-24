@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback  } from "react";
 import useScrollReveal from "../Components/useScrollReveal"
-
+import CurvedText from "../Components/CurvedText";
 /* =========================================================================
    Skills marquee (unchanged from your original)
    ========================================================================= */
@@ -327,6 +327,23 @@ export function CoffeeToggle({ visible = true }) {
   );
 }
 
+
+const CAPTIONS = ["Amaze", "Fist my Bump","🎵","Question","it is time go"];
+
+const DISTANCE_OPACITY_STOPS = [
+  { distance: 5, opacity: 0.9 },
+  { distance: 20, opacity: 0.5 },
+];
+
+function getOpacityForDistance(distance) {
+  const [near, far] = DISTANCE_OPACITY_STOPS;
+  if (distance <= near.distance) return near.opacity;
+  if (distance >= far.distance) return far.opacity;
+  const t = (distance - near.distance) / (far.distance - near.distance);
+  return near.opacity + t * (far.opacity - near.opacity);
+}
+
+
 /* =========================================================================
    FunFacts
    ========================================================================= */
@@ -334,6 +351,8 @@ export default function FunFacts() {
   const wrapperRef = useRef(null);
   const [visible, setVisible] = useState(false);
   const [headingRef, headingVisible] = useScrollReveal({threshold:1})
+
+
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -352,6 +371,89 @@ export default function FunFacts() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+
+
+  const [popups, setPopups] = useState([]);
+  const idRef = useRef(0);
+  const intervalRef = useRef(null);
+  const imageWrapperRef = useRef(null);
+
+  const [isInView, setIsInView] = useState(false);
+  const sectionRef = useRef(null);
+
+  // scroll-triggered slide-up + fade-in, plays once when it enters the viewport
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect(); // remove if you want it to replay every time it re-enters
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const spawnCaption = useCallback(() => {
+    const id = idRef.current++;
+    const text = CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)];
+
+    const rect = imageWrapperRef.current?.getBoundingClientRect();
+    const imageRadius = rect ? Math.max(rect.width, rect.height) / 2 : 80;
+
+    const angle = Math.random() * 2 * Math.PI;
+    const distance = 5 + Math.random() * 15;
+    const totalOffset = imageRadius + distance;
+    const x = Math.cos(angle) * totalOffset;
+    const y = Math.sin(angle) * totalOffset;
+    const rotate = -25 + Math.random() * 50;
+    const scale = 0.8 + Math.random() * 0.6;
+    const targetOpacity = getOpacityForDistance(distance);
+
+    setPopups((prev) => [
+      ...prev,
+      { id, text, x, y, rotate, scale, targetOpacity, visible: false },
+    ]);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setPopups((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, visible: true } : p))
+        );
+      });
+    });
+
+    setTimeout(() => {
+      setPopups((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, visible: false } : p))
+      );
+    }, 500);
+
+    setTimeout(() => {
+      setPopups((prev) => prev.filter((p) => p.id !== id));
+    }, 500 + 200);
+  }, []);
+
+  const handleMouseEnter = () => {
+    spawnCaption();
+    intervalRef.current = setInterval(spawnCaption, 350);
+  };
+
+  const handleMouseLeave = () => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  };
+
+
+
+
 
   return (
     <div
@@ -381,6 +483,51 @@ export default function FunFacts() {
         className="pointer-events-none absolute inset-x-0 top-0 h-full"
         style={{ background: "linear-gradient(to top,#F2F0EF, transparent 30%, transparent)" }}
       />
+
+
+
+
+
+
+
+
+
+<div
+      ref={sectionRef}
+      className={`relative w-full flex justify-center items-center pt-0 pb-30 transition-all duration-700 ease-out ${
+        isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
+      }`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div ref={imageWrapperRef} className="relative animate-spin-vibrate">
+        <Image
+          width={900}
+          height={900}
+          src="/Assets/rocky.png"
+          alt="rocky amazzeee"
+          className="object-contain w-[12vw]"
+        />
+      </div>
+
+      {popups.map((p) => (
+        <span
+          key={p.id}
+          className="pointer-events-none absolute left-1/2 top-1/2 select-none whitespace-nowrap font-bold text-black drop-shadow-md transition-all duration-600 ease-out"
+          style={{
+            transform: `translate(-50%, -50%) translate(${p.x}px, ${p.y}px) rotate(${p.rotate}deg) scale(${p.visible ? p.scale : p.scale * 0.5})`,
+            opacity: p.visible ? p.targetOpacity : 0,
+            fontSize: `${16 * p.scale}px`,
+          }}
+        >
+          {p.text}
+        </span>
+      ))}
+    </div>
+
+
+
+
 
       
 
