@@ -11,7 +11,7 @@ import React from "react";
 const CONTENT = {
   firstName: "Seo",
   lastName: "James",
-  resumeHref: "Assets/resume.pdf",
+  resumeHref: "Assets/resume-1.pdf",
   email: "seojameskc007@gmail.com",
   year: new Date().getFullYear(),
   badgeText: "OPEN TO WORK • OPEN TO WORK • ",
