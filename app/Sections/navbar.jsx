@@ -78,6 +78,7 @@ export function Logo({ theme }) {
         </span>
       </span>
     </h1>
+    
   );
 }
 
@@ -143,6 +144,22 @@ export default function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center">
       <Logo theme={theme} />
+
+
+      <div
+  className={`
+    fixed right-8 z-50 text-right
+    transition-all duration-700 ease-out
+    ${scrolled ? "top-4 scale-90 opacity-0" : "top-8 scale-100 opacity-100"}
+  `}
+>
+  <h1 className="text-[1.2vw] text-white/80">Seo James</h1>
+  <p className="text-[0.7vw] text-white/60">Hamilton, CA</p>
+</div>
+
+      
+
+
 
       <div
         className={[

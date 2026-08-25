@@ -43,23 +43,23 @@ function generateStrand(index, total) {
 }
 
 export default function PetrovaLines({
-    lineCount = 8,
+    lineCount = 6,
     starCount = 40,
-    height = 260,
+    height = 200,
 }) {
     const strands = Array.from({ length: lineCount }, (_, i) =>
         generateStrand(i, lineCount)
     );
     return (
         <div
-            className="absolute -top-10 left-0 w-full pointer-events-none"
+            className="absolute -top-10 left-0 w-full pointer-events-none pb-10"
             style={{ height: `${height}px` }}
         >
             
 
             <svg
                 className="absolute top-0 left-0 w-full h-full"
-                viewBox="0 0 1000 260"
+                viewBox="0 0 1000 290"
                 preserveAspectRatio="none"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -109,12 +109,12 @@ export default function PetrovaLines({
             <style jsx>{`
                 @keyframes driftA {
                     0%   { transform: translateX(0) translateY(0); }
-                    50%  { transform: translateX(-3%) translateY(1.5%); }
+                    50%  { transform: translateX(-5%) translateY(1.5%); }
                     100% { transform: translateX(0) translateY(0); }
                 }
                 @keyframes driftB {
                     0%   { transform: translateX(0) translateY(0); }
-                    50%  { transform: translateX(3%) translateY(-1.5%); }
+                    50%  { transform: translateX(5%) translateY(-1.5%); }
                     100% { transform: translateX(0) translateY(0); }
                 }
 

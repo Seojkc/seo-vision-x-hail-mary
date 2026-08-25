@@ -473,7 +473,7 @@ function renderLetters(text, startIndex, visible) {
           />
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(to top,black, transparent 10%, transparent)" }}
+            style={{ background: "linear-gradient(to top,black,black 5%, transparent 10%, transparent)" }}
           />
           <div
             className="pointer-events-none absolute inset-0"
@@ -545,14 +545,14 @@ function renderLetters(text, startIndex, visible) {
         <h1 className="text-[10vw] text-elegant-red">
           {renderLetters(line1, line1Start, visible)}
         </h1>
-        <h1 className="mt-26 ml-6 text-[5vw] text-[#b0b0b0]">
+        <h1 className="mt-26 ml-6 text-[5vw] text-[#9c9a9a]">
           {renderLetters(line2, line2Start, visible)}
         </h1>
       </div>
-      <h1 className="text-[15vw] mt-[-150px] ml-[-5px] text-[#e0e0e0]">
+      <h1 className="text-[15vw] mt-[-150px] ml-[-5px] text-[#cfcfcf]">
         {renderLetters(line3, line3Start, visible)}
       </h1>
-      <h1 className="text-[2vw] mt-[-80px] ml-[10px] text-[#b0b0b0]">
+      <h1 className="text-[2vw] mt-[-80px] ml-[10px] text-[#9c9a9a]">
         {renderLetters(line4, line4Start, visible)}
       </h1>
     </div>

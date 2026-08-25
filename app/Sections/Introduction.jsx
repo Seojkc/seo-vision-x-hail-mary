@@ -433,11 +433,11 @@ export default function Introduction() {
       >
         {/* custom cursor bubble -- replaces the native pointer while hovering this section */}
         <div
-          className="fixed z-[990] pointer-events-none border-black select-none rounded-full bg-white px-4 py-2 text-[20px] font-medium text-black shadow-lg transition-opacity duration-150 whitespace-nowrap"
+          className="fixed z-[990] pointer-events-none select-none rounded-full bg-white px-4 py-2 text-[20px] font-medium text-black shadow-lg whitespace-nowrap transition-[opacity,transform] duration-300 ease-out"
           style={{
             left: cursorPos.x,
             top: cursorPos.y,
-            transform: "translate(-50%, -100%)",
+            transform: `translate(-50%, -100%) scale(${showCursor ? 1 : 0.85})`,
             opacity: showCursor ? 1 : 0,
           }}
         >
