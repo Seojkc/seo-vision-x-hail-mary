@@ -8,10 +8,13 @@ import Projects from './Sections/Projects';
 import GithubSection from './Sections/github';
 import Navbar from "./Sections/navbar";
 import Contacts from "./Sections/Contacts";
+import CustomCursor from "./Components/CustomCursor" 
+
 
 export default function Home() {
   return (
     <div className='overflow-x-hidden gabriela-regular outer-body'>
+      <CustomCursor />
       <div className="absolute inset-0 z-50">
         <Navbar />
       </div>

@@ -11,9 +11,44 @@
 @import "tailwindcss";
 
 
+
+
 .outer-body {
-  cursor: url('../public/Assets/astronaut-cursor-64.png') 4 4, auto !important;
+  cursor: none !important;
 }
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  margin-left: -4px;
+  margin-top: -4px;
+  background-image: url('../public/Assets/astronaut-cursor-64.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 0.2s ease, transform 0.1s ease-out, filter 0.2s ease;
+  will-change: transform;
+}
+
+
+.custom-cursor.cursor-hidden {
+  opacity: 0;
+}
+
+/* hide on touch devices, since none of this applies */
+@media (hover: none) and (pointer: coarse) {
+  .custom-cursor {
+    display: none;
+  }
+  .outer-body {
+    cursor: auto !important;
+  }
+}
+
 
 
 .science-fot {
@@ -494,3 +529,4 @@ body {
   75%{ transform: rotate(-20deg) translateY(-10);}
  100% { transform: rotate(0deg) translateY(0); }
 }
+
