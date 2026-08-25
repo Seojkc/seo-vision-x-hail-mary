@@ -592,7 +592,7 @@ export default function GithubSection() {
               <div className="absolute inset-0 rounded-full bg-white ">
                 <a href="https://github.com/Seojkc">
                   <Image
-                    src="/Assets/Git.png"
+                    src="/Assets/git.png"
                     alt="Logo"
                     fill
                     sizes="80px"
