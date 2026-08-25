@@ -149,7 +149,7 @@ export default function Projects() {
     tags: ["React", "Python", "TypeScript", "Postgres", "Tailwind CSS"],
     status: "live", // "live" | "archived"
     href: "https://money-compass-navy.vercel.app/",
-    image: "/Assets/projects/project-1111.png",
+    image: "/Assets/projects/project-1-1.png",
   };
 
   /* ---- project 2 ---- */
@@ -160,7 +160,7 @@ export default function Projects() {
     tags: ["React Native", "Kotlin", "Ruby", "Swift", "Python"],
     status: "live",
     href: "https://github.com/Seojkc/GPSAlarmApp",
-    image: "/Assets/projects/project-22222.png",
+    image: "/Assets/projects/project-2-1.png",
   };
 
   /* ---- pinned-scroll progress ----

@@ -559,7 +559,7 @@ export default function GithubSection() {
       <Image
         width={600}
         height={500}
-        src="/Assets/Git.png"
+        src="/Assets/git.png"
         alt="github logo"
         style={logoStyle}
         className="w-[600px] h-[auto] invert object-contain absolute -right-70 -top-40"
