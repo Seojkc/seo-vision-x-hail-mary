@@ -197,6 +197,11 @@ export default function Welcome() {
         },[])
 
 
+
+
+
+
+
         const bottomWrapRef = useRef(null); // wraps mask4 + face4
 
 useEffect(() => {
@@ -235,6 +240,52 @@ useEffect(() => {
     };
 }, []);
 
+
+
+
+// ref for the outer facemask block (pointer-events-none absolute bottom-0 ...)
+const bottomOuterRef = useRef(null);
+
+useEffect(() => {
+    const el = bottomOuterRef.current;
+    const wrapperEl = wrapperRef.current;
+    if (!el || !wrapperEl) return;
+
+    const reposition = () => {
+        // desktop: hand control back to the md: classes untouched
+        if (window.innerWidth >= 768) {
+            el.style.bottom = "";
+            return;
+        }
+
+        // the actually-visible viewport height (accounts for mobile
+        // browser chrome / address bar collapsing, which 100vh/h-screen
+        // does not reliably track)
+        const visualHeight = window.visualViewport
+            ? window.visualViewport.height
+            : window.innerHeight;
+
+        // how much of the h-screen template box is currently hidden
+        // below the real visible fold
+        const hiddenBelow = wrapperEl.offsetHeight - visualHeight;
+
+        // pull the facemask block up by that amount so its bottom edge
+        // lands on the real screen bottom instead of the template bottom
+        el.style.bottom = `${hiddenBelow}px`;
+    };
+
+    reposition();
+
+    window.addEventListener("resize", reposition);
+    window.addEventListener("orientationchange", reposition);
+    window.visualViewport?.addEventListener("resize", reposition);
+
+    return () => {
+        window.removeEventListener("resize", reposition);
+        window.removeEventListener("orientationchange", reposition);
+        window.visualViewport?.removeEventListener("resize", reposition);
+    };
+}, []);
 
 
 
@@ -321,44 +372,47 @@ useEffect(() => {
                  as in the original — this was never the source of the
                  bleed-through, so it's untouched. It scrolls away with the
                  wrapper naturally alongside the now-detached background. */}
-            <div className="pointer-events-none absolute bottom-0 left-1/2 z-10 w-full -translate-x-1/2 md:-bottom-[2px] md:w-auto">
-            <div
-    ref={bottomWrapRef}
-    className="relative md:w-[min(800px,85vw)] mx-auto md:mx-0"
->                    <Image
-                        src="/Assets/mask4.png"
-                        alt="face"
-                        width={800}
-                        height={200}
-                        className="relative -bottom-[2px] z-10 h-auto w-full object-contain object-bottom"
-                        />
+<div
+    ref={bottomOuterRef}
+    className="pointer-events-none absolute bottom-0 left-1/2 z-10 w-full -translate-x-1/2 md:-bottom-[2px] md:w-auto"
+>
+    <div
+        ref={bottomWrapRef}
+        className="relative md:w-[min(800px,85vw)] mx-auto md:mx-0"
+    >
+        <Image
+            src="/Assets/mask4.png"
+            alt="face"
+            width={800}
+            height={200}
+            className="relative -bottom-[2px] z-10 h-auto w-full object-contain object-bottom"
+        />
 
-                    <Image
-                        ref={maskRef}
-                        src="/Assets/face4.png"
-                        alt="facemask"
-                        width={800}
-                        height={200}
-                        className="absolute -bottom-[2px] right-0 z-20 h-auto w-full object-contain object-bottom"
-                        style={{
-                            WebkitMaskImage: "url(#droplet-mask)",
-                            maskImage: "url(#droplet-mask)",
-                        }}
-                    />
+        <Image
+            ref={maskRef}
+            src="/Assets/face4.png"
+            alt="facemask"
+            width={800}
+            height={200}
+            className="absolute -bottom-[2px] right-0 z-20 h-auto w-full object-contain object-bottom"
+            style={{
+                WebkitMaskImage: "url(#droplet-mask)",
+                maskImage: "url(#droplet-mask)",
+            }}
+        />
 
-                    {/* Specular highlight — gives the reveal area a glossy "water surface" catch-light */}
-                    <div
-                        ref={glowRef}
-                        className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-150"
-                        style={{
-                            background:
-                                "radial-gradient(circle var(--gr, 0px) at var(--gx, -9999px) var(--gy, -9999px), rgba(255, 255, 255, 0) 0%, transparent 70%)",
-                            mixBlendMode: "screen",
-                            opacity: 0,
-                        }}
-                    />
-                </div>
-            </div>
+        <div
+            ref={glowRef}
+            className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-150"
+            style={{
+                background:
+                    "radial-gradient(circle var(--gr, 0px) at var(--gx, -9999px) var(--gy, -9999px), rgba(255, 255, 255, 0) 0%, transparent 70%)",
+                mixBlendMode: "screen",
+                opacity: 0,
+            }}
+        />
+    </div>
+</div>
         </div>
     );
 }
