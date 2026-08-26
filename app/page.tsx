@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div className='overflow-x-hidden gabriela-regular outer-body'>
       <CustomCursor />
-      <div className="absolute inset-0 z-50">
+      <div className="absolute inset-0 z-50 hidden md:block">
         <Navbar />
       </div>
 

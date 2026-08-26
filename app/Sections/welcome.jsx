@@ -229,8 +229,8 @@ export default function Welcome() {
                     width={2800}
                     height={900}
                     className="
-                        absolute w-[75%]
-                        bottom-[5%] left-[50%]
+                        absolute w-[150%] md:w-[75%]
+                        md:bottom-[5%] left-[50%]
                         -translate-x-1/2 translate-y-1/2
                         opacity-95
                         animate-pulse-glow
@@ -284,8 +284,8 @@ export default function Welcome() {
                  as in the original — this was never the source of the
                  bleed-through, so it's untouched. It scrolls away with the
                  wrapper naturally alongside the now-detached background. */}
-            <div className="pointer-events-none absolute -bottom-[2px] left-1/2 z-10 -translate-x-1/2">
-                <div className="relative w-[min(800px,85vw)]">
+            <div className="pointer-events-none absolute bottom-0 left-1/2 z-10 w-full -translate-x-1/2 md:-bottom-[2px] md:w-auto">
+                <div className="relative w-full md:w-[min(800px,85vw)]">
                     <Image
                         src="/Assets/mask4.png"
                         alt="face"

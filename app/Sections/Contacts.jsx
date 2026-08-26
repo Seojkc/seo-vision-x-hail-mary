@@ -62,6 +62,7 @@ export default function Contacts() {
           width:max-content;
           min-width:100%;
           padding-right:4%;
+          
         }
 
         .ef-name-col{
@@ -279,7 +280,7 @@ export default function Contacts() {
         }
       `}</style>
 
-      <div className="ef-inner overflow-hidden py-10">
+      <div className="ef-inner overflow-hidden py-[100px]">
         <div className="ef-name-col ">
           <h1 className="ef-name">{CONTENT.firstName} {CONTENT.lastName}</h1>
 
