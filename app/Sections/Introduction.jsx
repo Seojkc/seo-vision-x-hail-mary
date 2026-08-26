@@ -6,7 +6,6 @@ import PetrovaLines from "../Components/PetrovaLines";
 import CurvedText from "../Components/CurvedText";
 import useScrollReveal from "../Components/useScrollReveal"
 
-
 export function MusicCard({
   src,
   bgImage,
@@ -16,11 +15,15 @@ export function MusicCard({
   setCurrentSong,
   setPlay,
   className = "",
+  forceOpen = false,       // NEW — mobile: always-visible instead of hover-driven
+  positionClass = "absolute", // NEW — "relative" for the mobile grid layout
+  fluid = false,           // NEW — true: size via className (w-full aspect-square) instead of fixed px
 }) {
   const isActive = currentSong === src;
   const isPlaying = isActive && play;
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    e.stopPropagation(); // don't let this bubble up and close the toggle / trigger outside-click
     if (isActive) {
       setPlay((prev) => !prev);
     } else {
@@ -29,38 +32,36 @@ export function MusicCard({
     }
   };
 
+  const visibilityClasses = forceOpen
+    ? "opacity-100 scale-100 blur-none"
+    : "opacity-0 scale-0 blur-sm group-hover:opacity-100 group-hover:scale-100 group-hover:blur-none";
+
   return (
     <div
       onClick={handleClick}
       className={`
         group/card
-        absolute
-        w-[150px]
-        h-[150px]
+        ${positionClass}
+        ${fluid ? "w-full aspect-square" : ""}
         p-2
         rounded-[10px]
         overflow-hidden
         cursor-pointer
-      
-        opacity-0
-        scale-0
-        blur-sm
-      
-        group-hover:opacity-100
-        group-hover:scale-100
-        group-hover:blur-none
-      
+
+        ${visibilityClasses}
+
         active:scale-95
-      
+
         transition-[transform,opacity,filter,box-shadow]
         duration-500
         ease-[cubic-bezier(0.34,1.56,0.64,1)]
-      
+
         ${isActive ? "scale-110 z-30" : "hover:scale-105"}
-      
+
         ${className}
       `}
       style={{
+        ...(fluid ? {} : { width: 150, height: 150 }),
         boxShadow: isPlaying
           ? `0 0 0 2px rgba(255,255,255,0.9),
              0 0 28px 6px rgba(255,255,255,0.35),
@@ -188,11 +189,12 @@ const RIPPLE_FRAMES = [0, 0.5, 1, 1.5].map((p) =>
   buildWaveClipPath(112, 6, 32, 14, p * Math.PI)
 );
 
-function PhotoGrid({ image = "/Assets/Intro/photo-memories.png", className = "" }) {
+
+function PhotoGrid({ image = "/Assets/Intro/photo-memories.png", className = "", open = false }) {
   return (
     <div className={`absolute pointer-events-none ${className}`}>
       <div
-        className="wave-mask relative w-full h-full"
+        className={`wave-mask relative w-full h-full ${open ? "is-open" : ""}`}
         style={{
           maskImage: "linear-gradient(to right, transparent 0%, black 50%)",
           WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 50%)",
@@ -208,17 +210,17 @@ function PhotoGrid({ image = "/Assets/Intro/photo-memories.png", className = "" 
           src={image}
           alt=""
           fill
-          className="wave-image object-contain pointer-events-none"
+          className={`wave-image object-contain pointer-events-none ${open ? "is-open" : ""}`}
         />
       </div>
 
       <style jsx>{`
         .wave-mask {
           clip-path: var(--hidden-clip);
-          /* sweep in, then hand off to the looping ripple once revealed */
           transition: clip-path 1100ms cubic-bezier(0.22, 1, 0.36, 1);
         }
-        :global(.group:hover) .wave-mask {
+        :global(.group:hover) .wave-mask,
+        .wave-mask.is-open {
           clip-path: var(--visible-clip);
           animation: ripple 4200ms ease-in-out 1100ms infinite;
         }
@@ -232,14 +234,13 @@ function PhotoGrid({ image = "/Assets/Intro/photo-memories.png", className = "" 
             transform 1100ms cubic-bezier(0.22, 1, 0.36, 1),
             filter 900ms cubic-bezier(0.22, 1, 0.36, 1);
         }
-        :global(.group:hover) .wave-image {
+        :global(.group:hover) .wave-image,
+        .wave-image.is-open {
           opacity: 1;
           transform: scale(1);
           filter: blur(0px);
         }
 
-        /* subtle looping ripple across the four phase-shifted frames,
-           keeps the edge feeling alive instead of static once revealed */
         @keyframes ripple {
           0%   { clip-path: var(--visible-clip); }
           25%  { clip-path: var(--ripple-1); }
@@ -308,6 +309,43 @@ const TEXT_DURATION = 750;
 
 
 export default function Introduction() {
+
+
+
+
+  const [isMobile, setIsMobile] = useState(false);
+const [cameraOpen, setCameraOpen] = useState(false);
+const [headphoneOpen, setHeadphoneOpen] = useState(false);
+const cameraGroupRef = useRef(null);
+const headphoneGroupRef = useRef(null);
+
+useEffect(() => {
+  const mq = window.matchMedia("(max-width: 767px)");
+  const update = () => setIsMobile(mq.matches);
+  update();
+  mq.addEventListener("change", update);
+  return () => mq.removeEventListener("change", update);
+}, []);
+
+// tap anywhere outside an open group closes it — mirrors "click again to close"
+useEffect(() => {
+  const handleOutsideClick = (e) => {
+    if (cameraGroupRef.current && !cameraGroupRef.current.contains(e.target)) {
+      setCameraOpen(false);
+    }
+    if (headphoneGroupRef.current && !headphoneGroupRef.current.contains(e.target)) {
+      setHeadphoneOpen(false);
+    }
+  };
+  document.addEventListener("click", handleOutsideClick);
+  return () => document.removeEventListener("click", handleOutsideClick);
+}, []);
+
+
+
+
+
+
 
   const [headingRef, headingVisible] = useScrollReveal({threshold:1})
   const [play, setPlay] = useState(true);
@@ -433,16 +471,16 @@ export default function Introduction() {
       >
         {/* custom cursor bubble -- replaces the native pointer while hovering this section */}
         <div
-          className="fixed z-[990] pointer-events-none select-none rounded-full bg-white px-4 py-2 text-[20px] font-medium text-black shadow-lg whitespace-nowrap transition-[opacity,transform] duration-300 ease-out"
-          style={{
-            left: cursorPos.x,
-            top: cursorPos.y,
-            transform: `translate(-50%, -100%) scale(${showCursor ? 1 : 0.85})`,
-            opacity: showCursor ? 1 : 0,
-          }}
-        >
-          Hover the icons 🙂
-        </div>
+        className="hidden md:block fixed z-[990] pointer-events-none select-none rounded-full bg-white px-4 py-2 text-[20px] font-medium text-black shadow-lg whitespace-nowrap transition-[opacity,transform] duration-300 ease-out"
+        style={{
+          left: cursorPos.x,
+          top: cursorPos.y,
+          transform: `translate(-50%, -100%) scale(${showCursor ? 1 : 0.85})`,
+          opacity: showCursor ? 1 : 0,
+        }}
+      >
+              Hover the icons 🙂
+      </div>
 
 
        
@@ -500,164 +538,225 @@ export default function Introduction() {
 >
     {/* ===================== CAMERA GROUP ===================== */}
     <div
-        className="static md:absolute  mt-[45%] md:mt-[0%]  mx-auto md:mx-0 left-auto md:left-[20%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
-        style={popStyle(0)}
-    >
-        <div className="absolute inset-0 flex items-center justify-center group">
-          {/* Curved text -- scroll-scale-in wrapper OUTSIDE the hover-hide wrapper,
-              so scroll-reveal and hover-hide animate independently without
-              fighting over the same transform */}
-          <div className="absolute inset-0" style={textRevealStyle(0)}>
+    ref={cameraGroupRef}
+    className="relative md:absolute mt-[45%] md:mt-[0%] mx-auto md:mx-0 left-auto md:left-[20%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
+    style={popStyle(0)}
+    onClick={(e) => {
+        if (isMobile) {
+            e.stopPropagation();
+            setCameraOpen((prev) => !prev);
+        }
+    }}
+>
+    <div className="absolute inset-0 flex items-center justify-center group">
+        <div className="absolute inset-0" style={textRevealStyle(0)}>
             <div
-              className="
-                absolute inset-0
-                transition-all duration-300
-                group-hover:opacity-0
-                group-hover:scale-90
-              "
+                className={`
+                    absolute inset-0
+                    transition-all duration-300
+                    ${isMobile
+                        ? (cameraOpen ? "opacity-0 scale-90" : "opacity-100 scale-100")
+                        : "group-hover:opacity-0 group-hover:scale-90"}
+                `}
             >
-              <CurvedText
-                text=" ✿ CAPTURE ✿ MOMENTS ✿ STORIES ✿ MEMORIES"
-                letterSpacing={3}
-              />
+                <CurvedText
+                    text=" ✿ CAPTURE ✿ MOMENTS ✿ STORIES ✿ MEMORIES"
+                    letterSpacing={3}
+                />
             </div>
-          </div>
+        </div>
 
-          {/* PHOTO GRID */}
-          <PhotoGrid
+        <PhotoGrid
+            open={isMobile && cameraOpen}
             className="
-              right-1/2
-              top-1/2
-              z-21
-              translate-x-[50%]
-              -translate-y-1/2
-              w-[900px]
-              h-[550px]
+                right-1/2
+                top-1/2
+                z-21
+                translate-x-[50%]
+                -translate-y-1/2
+                w-[900px]
+                h-[550px]
             "
-          />
+        />
 
-          {/* CAMERA */}
-          <Image
+        <Image
             src="/Assets/Intro/camera.png"
             width={150}
             height={100}
             alt="camera"
             className="
-              relative
-              z-20
-              rotate-[349deg]
-              transition-transform
-              duration-300
-              group-hover:scale-105
+                relative
+                z-20
+                rotate-[349deg]
+                transition-transform
+                duration-300
+                group-hover:scale-105
+                cursor-pointer
             "
-          />
-        </div>
-      </div>
+        />
+    </div>
+</div>
+
+
 
       {/* ===================== HEADPHONE GROUP ===================== */}
-      <div
-    className="relative md:absolute   mt-[45%] md:mt-[0%] mx-auto md:mx-0 left-auto md:left-[50%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
+
+
+
+
+<div
+    ref={headphoneGroupRef}
+    className="relative md:absolute mt-[45%] md:mt-[0%] mx-auto md:mx-0 left-auto md:left-[50%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
     style={popStyle(1)}
+    onClick={(e) => {
+        if (isMobile) {
+            e.stopPropagation();
+            setHeadphoneOpen((prev) => !prev);
+        }
+    }}
 >
-        <div className="absolute inset-0 flex items-center justify-center group">
-          {/* Curved text */}
-          <div className="absolute inset-0" style={textRevealStyle(1)}>
+    <div className="absolute inset-0 flex items-center justify-center group">
+        <div className="absolute inset-0" style={textRevealStyle(1)}>
             <div
-              className="
-                absolute inset-0
-                transition-all duration-300
-                group-hover:opacity-0
-                group-hover:scale-90
-              "
+                className={`
+                    absolute inset-0
+                    transition-all duration-300
+                    ${isMobile
+                        ? (headphoneOpen ? "opacity-0 scale-90" : "opacity-100 scale-100")
+                        : "group-hover:opacity-0 group-hover:scale-90"}
+                `}
             >
-              <CurvedText text="✦ MUSIC ✦ PLAY ✦ PAUSE ✦ REWIND ✦ REPEAT" />
+                <CurvedText text="✦ MUSIC ✦ PLAY ✦ PAUSE ✦ REWIND ✦ REPEAT" />
             </div>
-          </div>
+        </div>
 
-          {/* TOP CARD */}
-          <MusicCard
-            src="/Assets/mp3/Sign-of-the-Times.mp3"
-            bgImage="/Assets/mp3/Sign-of-the-Times-cover.png"
-            heading="Sign of the  Times"
-            currentSong={currentSong}
-            play={play}
-            setCurrentSong={setCurrentSong}
-            setPlay={setPlay}
-            className="
-              -top-[110px]
-              left-1/2
-              -translate-x-1/2
-            "
-          />
+        {/* Desktop-only hover cards — untouched, just wrapped so mobile never renders them */}
+        <div className="hidden md:contents">
+            <MusicCard
+                src="/Assets/mp3/Sign-of-the-Times.mp3"
+                bgImage="/Assets/mp3/Sign-of-the-Times-cover.png"
+                heading="Sign of the  Times"
+                currentSong={currentSong}
+                play={play}
+                setCurrentSong={setCurrentSong}
+                setPlay={setPlay}
+                className="-top-[110px] left-1/2 -translate-x-1/2"
+            />
+            <MusicCard
+                src="/Assets/mp3/Marakkavillayae.mp3"
+                bgImage="/Assets/mp3/Marakkavillayae-cover.png"
+                heading="Marakkavillayae"
+                currentSong={currentSong}
+                play={play}
+                setCurrentSong={setCurrentSong}
+                setPlay={setPlay}
+                className="-right-[110px] top-1/2 -translate-y-1/2 delay-75"
+            />
+            <MusicCard
+                src="/Assets/mp3/glorious-purpose.mp3"
+                bgImage="/Assets/mp3/glorious-purpose-cover.png"
+                heading="Purpose is Glorious"
+                currentSong={currentSong}
+                play={play}
+                setCurrentSong={setCurrentSong}
+                setPlay={setPlay}
+                className="-bottom-[110px] left-1/2 -translate-x-1/2 delay-150"
+            />
+            <MusicCard
+                src="/Assets/mp3/aaro-nenjil.mp3"
+                bgImage="/Assets/mp3/aaro-nenjil-cover.png"
+                heading="Aaro Nenjil"
+                currentSong={currentSong}
+                play={play}
+                setCurrentSong={setCurrentSong}
+                setPlay={setPlay}
+                className="-left-[110px] top-1/2 -translate-y-1/2 delay-200"
+            />
+        </div>
 
-          {/* RIGHT CARD */}
-          <MusicCard
-            src="/Assets/mp3/Marakkavillayae.mp3"
-            bgImage="/Assets/mp3/Marakkavillayae-cover.png"
-            heading="Marakkavillayae"
-            currentSong={currentSong}
-            play={play}
-            setCurrentSong={setCurrentSong}
-            setPlay={setPlay}
-            className="
-              -right-[110px]
-              top-1/2
-              -translate-y-1/2
-              delay-75
-            "
-          />
+        {/* Mobile-only toggle grid — fits within the viewport width */}
+        {isMobile && (
+            <div
+                className={`
+                    md:hidden
+                    absolute left-1/2 -translate-x-1/2 top-[30px]
+                    grid grid-cols-2 gap-3
+                    w-[70vw] max-w-[280px]
+                    z-30
+                    transition-all duration-300
+                    ${headphoneOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-90 pointer-events-none"}
+                `}
+            >
+                <MusicCard
+                    src="/Assets/mp3/Sign-of-the-Times.mp3"
+                    bgImage="/Assets/mp3/Sign-of-the-Times-cover.png"
+                    heading="Sign of the  Times"
+                    currentSong={currentSong}
+                    play={play}
+                    setCurrentSong={setCurrentSong}
+                    setPlay={setPlay}
+                    forceOpen
+                    positionClass="relative"
+                    fluid
+                />
+                <MusicCard
+                    src="/Assets/mp3/Marakkavillayae.mp3"
+                    bgImage="/Assets/mp3/Marakkavillayae-cover.png"
+                    heading="Marakkavillayae"
+                    currentSong={currentSong}
+                    play={play}
+                    setCurrentSong={setCurrentSong}
+                    setPlay={setPlay}
+                    forceOpen
+                    positionClass="relative"
+                    fluid
+                />
+                <MusicCard
+                    src="/Assets/mp3/glorious-purpose.mp3"
+                    bgImage="/Assets/mp3/glorious-purpose-cover.png"
+                    heading="Purpose is Glorious"
+                    currentSong={currentSong}
+                    play={play}
+                    setCurrentSong={setCurrentSong}
+                    setPlay={setPlay}
+                    forceOpen
+                    positionClass="relative"
+                    fluid
+                />
+                <MusicCard
+                    src="/Assets/mp3/aaro-nenjil.mp3"
+                    bgImage="/Assets/mp3/aaro-nenjil-cover.png"
+                    heading="Aaro Nenjil"
+                    currentSong={currentSong}
+                    play={play}
+                    setCurrentSong={setCurrentSong}
+                    setPlay={setPlay}
+                    forceOpen
+                    positionClass="relative"
+                    fluid
+                />
+            </div>
+        )}
 
-          {/* BOTTOM CARD */}
-          <MusicCard
-            src="/Assets/mp3/glorious-purpose.mp3"
-            bgImage="/Assets/mp3/glorious-purpose-cover.png"
-            heading="Purpose is Glorious"
-            currentSong={currentSong}
-            play={play}
-            setCurrentSong={setCurrentSong}
-            setPlay={setPlay}
-            className="
-              -bottom-[110px]
-              left-1/2
-              -translate-x-1/2
-              delay-150
-            "
-          />
-
-          {/* LEFT CARD */}
-          <MusicCard
-            src="/Assets/mp3/aaro-nenjil.mp3"
-            bgImage="/Assets/mp3/aaro-nenjil-cover.png"
-            heading="Aaro Nenjil"
-            currentSong={currentSong}
-            play={play}
-            setCurrentSong={setCurrentSong}
-            setPlay={setPlay}
-            className="
-              -left-[110px]
-              top-1/2
-              -translate-y-1/2
-              delay-200
-            "
-          />
-
-          {/* HEADPHONE */}
-          <Image
+        <Image
             src="/Assets/Intro/headphone.png"
             width={150}
             height={100}
             alt="headphones"
             className="
-              relative
-              z-20
-              rotate-[349deg]
-              transition-transform
-              duration-300
-              group-hover:scale-105
+                relative
+                z-20
+                rotate-[349deg]
+                transition-transform
+                duration-300
+                group-hover:scale-105
+                cursor-pointer
             "
-          />
-        </div>
-      </div>
+        />
+    </div>
+</div>
+
+
 
       {/* ===================== MP3 PLAYER ===================== */}
       <div
