@@ -480,7 +480,7 @@ export default function Introduction() {
 <div className="text-[#C4C4C4] items-center flex justify-center md:pb-[20%] md:py-[0%] py-[20%]">
 <h3
     ref={headingRef}
-    className={`reveal-wipe ${headingVisible ? "is-visible" : ""} md:text-4xl text-2xl mt-[20%] gabriela-regular w-[80%] md:w-[900px] text-center`}
+    className={`reveal-wipe ${headingVisible ? "is-visible" : ""} md:text-4xl text-2xl mt-[50%] md:mt-[20%] gabriela-regular w-[80%] md:w-[900px] text-center`}
 >
     Hi, I'm <span className="text-4xl md:text-6xl text-[#ff0000]">Seo James</span>, a passionate
     <br className="md:hidden" />
@@ -500,7 +500,7 @@ export default function Introduction() {
 >
     {/* ===================== CAMERA GROUP ===================== */}
     <div
-        className="static md:absolute mx-auto md:mx-0 left-auto md:left-[20%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
+        className="static md:absolute  mt-[45%] md:mt-[0%]  mx-auto md:mx-0 left-auto md:left-[20%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
         style={popStyle(0)}
     >
         <div className="absolute inset-0 flex items-center justify-center group">
@@ -556,9 +556,9 @@ export default function Introduction() {
 
       {/* ===================== HEADPHONE GROUP ===================== */}
       <div
-        className="static md:absolute mx-auto md:mx-0 mt-[45%] md:mt-[0%] left-auto md:left-[50%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-[100px] md:pb-0"
-        style={popStyle(1)}
-    >
+    className="relative md:absolute   mt-[45%] md:mt-[0%] mx-auto md:mx-0 left-auto md:left-[50%] translate-x-0 md:-translate-x-1/2 w-[250px] h-[250px] pb-16 md:pb-0"
+    style={popStyle(1)}
+>
         <div className="absolute inset-0 flex items-center justify-center group">
           {/* Curved text */}
           <div className="absolute inset-0" style={textRevealStyle(1)}>
@@ -661,9 +661,9 @@ export default function Introduction() {
 
       {/* ===================== MP3 PLAYER ===================== */}
       <div
-        className="cursor-point pointer-events-none mt-[45%] md:mt-[0%] static md:absolute mx-auto md:mx-0 left-auto md:left-[82%] -translate-x-1/8 md:-translate-x-1/2 w-[120vw] md:w-[35vw] aspect-[4/2] pb-[30px] md:pb-0"
-        style={popStyle(2)}
-    >
+    className="cursor-pointer pointer-events-none relative md:absolute mt-[45%] md:mt-[0%] md:left-[82%] md:-translate-x-1/2 w-[120vw] md:w-[35vw] aspect-[4/2] pb-16 md:pb-0"
+    style={popStyle(2)}
+>
         {/* MP3 background */}
         <Image
           src="/Assets/Intro/mp3-background-1.png"
