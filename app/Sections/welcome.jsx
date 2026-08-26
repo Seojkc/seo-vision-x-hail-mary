@@ -197,30 +197,61 @@ export default function Welcome() {
         },[])
 
 
+        const bottomWrapRef = useRef(null); // wraps mask4 + face4
+
+useEffect(() => {
+    const el = bottomWrapRef.current;
+    if (!el) return;
+
+    const ASPECT = 800 / 200;        // mask4.png / face4.png intrinsic ratio (4:1)
+    const MAX_HEIGHT_VH = 0.28;      // cap the bottom art at 28% of viewport height on mobile — tweak to taste
+
+    const resize = () => {
+        // above md breakpoint, hand control back to Tailwind's md: classes
+        if (window.innerWidth >= 768) {
+            el.style.width = "";
+            return;
+        }
+
+        const vw = window.innerWidth;
+        const vh = window.innerHeight; // use visualViewport if you also want to dodge mobile URL-bar resize jumps
+        const maxHeight = vh * MAX_HEIGHT_VH;
+        const heightAtFullWidth = vw / ASPECT;
+
+        if (heightAtFullWidth > maxHeight) {
+            // width-constrained-by-height: shrink width so height fits
+            el.style.width = `${(maxHeight * ASPECT).toFixed(0)}px`;
+        } else {
+            el.style.width = "100%";
+        }
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    window.addEventListener("orientationchange", resize);
+    return () => {
+        window.removeEventListener("resize", resize);
+        window.removeEventListener("orientationchange", resize);
+    };
+}, []);
+
+
+
 
 
     return (
         // Outer wrapper stays a plain h-screen block in normal document
         // flow — this box is what the background layer detaches to once
         // scrolled past, and what mouse tracking measures against.
-        <div ref={wrapperRef} id="home" className="relative h-screen w-full overflow-hidden">
+<div ref={wrapperRef} id="home" className="relative h-[100dvh] w-full overflow-hidden md:h-screen">
 
-            {/* ---- BACKGROUND LAYER: navbar mount, gradient, planet, SEO text ----
-                 `fixed` while `pinned` is true (identical look/feel to true
-                 position:fixed — no sticky quirks). The instant the
-                 wrapper's bottom edge reaches the top of the viewport,
-                 this flips to `absolute bottom-0`, which lands on the
-                 exact same pixels (since the wrapper is exactly one
-                 viewport tall) — zero visual jump — and from then on it
-                 scrolls away with the wrapper like normal content,
-                 permanently, never reappearing behind later sections. */}
-            <div
-                className={
-                    pinned
-                        ? "fixed inset-x-0 top-0 h-screen z-0"
-                        : "absolute inset-x-0 bottom-0 h-screen z-0"
-                }
-            >
+<div
+    className={
+        pinned
+            ? "fixed inset-x-0 top-0 h-[100dvh] z-0 md:h-screen"
+            : "absolute inset-x-0 bottom-0 h-[100dvh] z-0 md:h-screen"
+    }
+>
                 
 
                 <Image
@@ -260,9 +291,15 @@ export default function Welcome() {
                     className="absolute inset-x-0 top-0 h-[90%] px-5 flex items-center justify-center agdasima-regular"
                     style={seoStyle}
                 >
-                    <h1 className="w-full text-center text-[18vw] font-bold scaleY-15 glass-heading">
+                    <h1 className="w-full text-center md:text-[18vw] font-bold scaleY-15 glass-heading md:inline-block">
                         <span className="max-[600px]:hidden">SEO JAMES</span>
-                        <span className="hidden max-[600px]:inline">SEO</span>
+                        <div className="hidden max-[600px]:inline w-[100%]">
+                            <span className="text-[20vh]">SEO</span>
+                            <br/>
+                            <span className="text-[12vh]">JAMES</span>
+                        </div>
+                        
+
                     </h1>
                 </div>
             </div>
@@ -285,14 +322,16 @@ export default function Welcome() {
                  bleed-through, so it's untouched. It scrolls away with the
                  wrapper naturally alongside the now-detached background. */}
             <div className="pointer-events-none absolute bottom-0 left-1/2 z-10 w-full -translate-x-1/2 md:-bottom-[2px] md:w-auto">
-                <div className="relative w-full md:w-[min(800px,85vw)]">
-                    <Image
+            <div
+    ref={bottomWrapRef}
+    className="relative md:w-[min(800px,85vw)] mx-auto md:mx-0"
+>                    <Image
                         src="/Assets/mask4.png"
                         alt="face"
                         width={800}
                         height={200}
-                        className="relative  -bottom-[2px] z-10 h-auto w-full object-contain object-bottom"
-                    />
+                        className="relative -bottom-[2px] z-10 h-auto w-full object-contain object-bottom"
+                        />
 
                     <Image
                         ref={maskRef}
