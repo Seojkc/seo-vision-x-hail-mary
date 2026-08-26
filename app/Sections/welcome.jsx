@@ -243,13 +243,13 @@ useEffect(() => {
         // Outer wrapper stays a plain h-screen block in normal document
         // flow — this box is what the background layer detaches to once
         // scrolled past, and what mouse tracking measures against.
-<div ref={wrapperRef} id="home" className="relative h-[100dvh] w-full overflow-hidden md:h-screen">
+<div ref={wrapperRef} id="home" className="relative w-full overflow-hidden h-screen">
 
 <div
     className={
         pinned
-            ? "fixed inset-x-0 top-0 h-[100dvh] z-0 md:h-screen"
-            : "absolute inset-x-0 bottom-0 h-[100dvh] z-0 md:h-screen"
+            ? "fixed inset-x-0 top-0  z-0 h-screen"
+            : "absolute inset-x-0 bottom-0  z-0 h-screen"
     }
 >
                 
