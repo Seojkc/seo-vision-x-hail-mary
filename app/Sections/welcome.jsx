@@ -200,93 +200,75 @@ export default function Welcome() {
 
 
 
-
-
         const bottomWrapRef = useRef(null); // wraps mask4 + face4
 
-useEffect(() => {
-    const el = bottomWrapRef.current;
-    if (!el) return;
-
-    const ASPECT = 800 / 200;        // mask4.png / face4.png intrinsic ratio (4:1)
-    const MAX_HEIGHT_VH = 0.28;      // cap the bottom art at 28% of viewport height on mobile — tweak to taste
-
-    const resize = () => {
-        // above md breakpoint, hand control back to Tailwind's md: classes
-        if (window.innerWidth >= 768) {
-            el.style.width = "";
-            return;
-        }
-
-        const vw = window.innerWidth;
-        const vh = window.innerHeight; // use visualViewport if you also want to dodge mobile URL-bar resize jumps
-        const maxHeight = vh * MAX_HEIGHT_VH;
-        const heightAtFullWidth = vw / ASPECT;
-
-        if (heightAtFullWidth > maxHeight) {
-            // width-constrained-by-height: shrink width so height fits
-            el.style.width = `${(maxHeight * ASPECT).toFixed(0)}px`;
-        } else {
-            el.style.width = "100%";
-        }
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    window.addEventListener("orientationchange", resize);
-    return () => {
-        window.removeEventListener("resize", resize);
-        window.removeEventListener("orientationchange", resize);
-    };
-}, []);
-
-
-
-
-// ref for the outer facemask block (pointer-events-none absolute bottom-0 ...)
-const bottomOuterRef = useRef(null);
-
-useEffect(() => {
-    const el = bottomOuterRef.current;
-    const wrapperEl = wrapperRef.current;
-    if (!el || !wrapperEl) return;
-
-    const reposition = () => {
-        // desktop: hand control back to the md: classes untouched
-        if (window.innerWidth >= 768) {
-            el.style.bottom = "";
-            return;
-        }
-
-        // the actually-visible viewport height (accounts for mobile
-        // browser chrome / address bar collapsing, which 100vh/h-screen
-        // does not reliably track)
-        const visualHeight = window.visualViewport
-            ? window.visualViewport.height
-            : window.innerHeight;
-
-        // how much of the h-screen template box is currently hidden
-        // below the real visible fold
-        const hiddenBelow = wrapperEl.offsetHeight - visualHeight;
-
-        // pull the facemask block up by that amount so its bottom edge
-        // lands on the real screen bottom instead of the template bottom
-        el.style.bottom = `${hiddenBelow}px`;
-    };
-
-    reposition();
-
-    window.addEventListener("resize", reposition);
-    window.addEventListener("orientationchange", reposition);
-    window.visualViewport?.addEventListener("resize", reposition);
-
-    return () => {
-        window.removeEventListener("resize", reposition);
-        window.removeEventListener("orientationchange", reposition);
-        window.visualViewport?.removeEventListener("resize", reposition);
-    };
-}, []);
-
+        useEffect(() => {
+            const el = bottomWrapRef.current;
+            if (!el) return;
+        
+            const ASPECT = 800 / 200;        // mask4.png / face4.png intrinsic ratio (4:1)
+            const MAX_HEIGHT_VH = 0.28;      // cap the bottom art at 28% of viewport height on mobile — tweak to taste
+        
+            const resize = () => {
+                // above md breakpoint, hand control back to Tailwind's md: classes
+                if (window.innerWidth >= 768) {
+                    el.style.width = "";
+                    return;
+                }
+        
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const maxHeight = vh * MAX_HEIGHT_VH;
+                const heightAtFullWidth = vw / ASPECT;
+        
+                if (heightAtFullWidth > maxHeight) {
+                    el.style.width = `${(maxHeight * ASPECT).toFixed(0)}px`;
+                } else {
+                    el.style.width = "100%";
+                }
+            };
+        
+            resize();
+            window.addEventListener("resize", resize);
+            window.addEventListener("orientationchange", resize);
+            return () => {
+                window.removeEventListener("resize", resize);
+                window.removeEventListener("orientationchange", resize);
+            };
+        }, []);
+        
+        
+        // ref for the outer facemask block (pointer-events-none absolute bottom-0 ...)
+        const bottomOuterRef = useRef(null);
+        const bottomRafId = useRef(null);
+        
+        useEffect(() => {
+            const wrapperEl = wrapperRef.current;
+            const outerEl = bottomOuterRef.current;
+            if (!wrapperEl || !outerEl) return;
+        
+            const tick = () => {
+                if (window.innerWidth >= 768) {
+                    // desktop: hand control back to the md: classes untouched
+                    outerEl.style.bottom = "";
+                } else {
+                    const visualHeight = window.visualViewport
+                        ? window.visualViewport.height
+                        : window.innerHeight;
+        
+                    const rect = wrapperEl.getBoundingClientRect();
+                    const hiddenBelow = rect.bottom - visualHeight;
+        
+                    outerEl.style.bottom = `${Math.max(hiddenBelow, 0)}px`;
+                }
+        
+                bottomRafId.current = requestAnimationFrame(tick);
+            };
+        
+            bottomRafId.current = requestAnimationFrame(tick);
+        
+            return () => cancelAnimationFrame(bottomRafId.current);
+        }, []);
 
 
 
