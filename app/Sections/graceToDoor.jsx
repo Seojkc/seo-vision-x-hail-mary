@@ -333,7 +333,7 @@ export default function graceToDoor() {
         >
           {/* ---- SVG rope layer ---- */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"
             style={{ overflow: "visible" }}
           >
             <defs>
@@ -396,40 +396,43 @@ export default function graceToDoor() {
           </svg>
 
           {/* ---- Astronaut ---- */}
-          <div ref={astronautWrapRef} className="relative ml-[10%] will-change-transform">
-            <div ref={astronautImgRef} className="will-change-[filter]">
-              <Image
-                width={350}
-                height={200}
-                alt="astronaut"
-                src="/Assets/grace-suit.png"
-              />
-            </div>
+          <div
+  ref={astronautWrapRef}
+  className="relative ml-[4%] sm:ml-[6%] md:ml-[10%] will-change-transform"
+>
+  <div ref={astronautImgRef} className="will-change-[filter]">
+    <Image
+      width={350}
+      height={200}
+      alt="astronaut"
+      src="/Assets/grace-suit.png"
+      className="w-[160px] sm:w-[220px] md:w-[300px] lg:w-[350px] h-auto"
+    />
+  </div>
 
-           
-
-            <span
-              ref={astronautAnchorRef}
-              className="absolute"
-              style={{ right: "6%", top: "34%", width: 1, height: 1 }}
-            />
-          </div>
+  <span
+    ref={astronautAnchorRef}
+    className="absolute"
+    style={{ right: "6%", top: "34%", width: 1, height: 1 }}
+  />
+</div>
 
           {/* ---- Shuttle door ---- */}
-          <div className="absolute right-[0%]">
-            
-            <Image
-              width={400}
-              height={200}
-              alt="space-door"
-              src="/Assets/space-door-1.png"
-            />
-            <span
-              ref={doorAnchorRef}
-              className="absolute"
-              style={{ left: "6%", top: "40%", width: 1, height: 1 }}
-            />
-          </div>
+       
+<div className="absolute right-[0%]">
+  <Image
+    width={400}
+    height={200}
+    alt="space-door"
+    src="/Assets/space-door-1.png"
+    className="w-[200px] sm:w-[260px] md:w-[340px] lg:w-[400px] h-auto"
+  />
+  <span
+    ref={doorAnchorRef}
+    className="absolute"
+    style={{ left: "6%", top: "40%", width: 1, height: 1 }}
+  />
+</div>
         </div>
 
         {/* cinematic vignette frame */}

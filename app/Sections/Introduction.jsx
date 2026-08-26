@@ -532,6 +532,11 @@ useEffect(() => {
 
 
 
+<div className="md:hidden text-center text-white/40 ">
+          <h3>click icons</h3>
+</div>
+
+
 <div
     ref={rowRef}
     className="relative py-[10%] pb-[20%] w-full h-auto md:h-[200px] flex flex-col md:flex-row items-center gabriela-regular"
