@@ -312,7 +312,7 @@ function TypewriterHeading() {
       alt={project1.title}
       width={1080}
       height={1080}
-      className="w-auto h-[95%] max-w-[90%] object-contain md:w-full md:h-auto md:max-w-none"
+      className="w-auto h-[95%] max-w-[99%] object-contain md:w-full md:h-auto md:max-w-none"
       src={project1.image}
     />
   </div>
@@ -330,7 +330,7 @@ function TypewriterHeading() {
       alt={project2.title}
       width={1080}
       height={1080}
-      className="w-auto h-[95%] max-w-[90%] object-contain md:w-full md:h-auto md:max-w-none"
+      className="w-auto h-[95%] max-w-[99%] object-contain md:w-full md:h-auto md:max-w-none"
       src={project2.image}
     />
   </div>
