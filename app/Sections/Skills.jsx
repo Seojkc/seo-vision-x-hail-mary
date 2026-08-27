@@ -239,7 +239,7 @@ export default function Skills() {
                   <div className="pointer-events-none absolute inset-0 -z-10 origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100" />
 
                   <div
-                    className={`pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[12vh] origin-bottom scale-y-0 opacity-0 transition-all duration-[650ms] md:group-hover:scale-y-100 md:group-hover:opacity-80 ${
+                    className={`pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[7vh] md:h-[12vh] origin-bottom scale-y-0 opacity-0 transition-all duration-[650ms] md:group-hover:scale-y-100 md:group-hover:opacity-80 ${
                       isCenterActive ? "scale-y-100 opacity-80" : ""
                     }`}
                     style={{
@@ -249,7 +249,7 @@ export default function Skills() {
                       backgroundPosition: " left bottom",
                       backgroundSize: "auto 100%",
                       maskImage:
-                        "linear-gradient(to right, transparent 0%, black 30%,black 40%, transparent 80%)",
+                        "linear-gradient(to right, transparent 0%, black 30%,black 40%, transparent 90%)",
                       WebkitMaskImage:
                         "linear-gradient(to right, transparent 0%, black 40%, transparent 70%)",
                     }}

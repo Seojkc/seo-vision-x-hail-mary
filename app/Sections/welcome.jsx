@@ -47,6 +47,11 @@ export default function Welcome() {
     const mouse = useRef({ x: -9999, y: -9999 });
     const active = useRef(false);
 
+    // true below the md breakpoint — on mobile there's no real cursor, so
+    // the droplet is driven by an imaginary mouse fixed at the viewport's
+    // x/y center instead of real mousemove events.
+    const isMobileRef = useRef(false);
+
     // spring-driven position (lags/overshoots slightly — premium "weighted" feel)
     const pos = useRef({ x: -9999, y: -9999, vx: 0, vy: 0 });
     const rad = useRef({ v: 0, vel: 0 }); // radius spring
@@ -97,6 +102,19 @@ export default function Welcome() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    // tracks the md breakpoint so the animate loop below knows whether to
+    // drive the droplet from real mousemove or from the imaginary centered
+    // mouse. Kept in a ref (not state) so it doesn't restart the rAF loop.
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 767px)");
+        const update = () => {
+            isMobileRef.current = mq.matches;
+        };
+        update();
+        mq.addEventListener("change", update);
+        return () => mq.removeEventListener("change", update);
+    }, []);
+
     useEffect(() => {
         const maskEl = maskRef.current;
         const pathEl = pathRef.current;
@@ -107,12 +125,14 @@ export default function Welcome() {
         let lastSpeed = 0;
 
         const handleMove = (e) => {
+            if (isMobileRef.current) return; // mobile uses the simulated center mouse instead
             const rect = maskEl.getBoundingClientRect();
             mouse.current.x = e.clientX - rect.left;
             mouse.current.y = e.clientY - rect.top;
             active.current = true;
         };
         const handleLeave = () => {
+            if (isMobileRef.current) return;
             active.current = false;
         };
 
@@ -121,6 +141,16 @@ export default function Welcome() {
 
         const animate = () => {
             t += 1;
+
+            // on mobile, pin the "mouse" to the viewport's x/y center every
+            // frame (in maskEl-local coords, same convention as handleMove)
+            // so the droplet stays open and centered without a real cursor.
+            if (isMobileRef.current) {
+                const rect = maskEl.getBoundingClientRect();
+                mouse.current.x = window.innerWidth / 2 - rect.left;
+                mouse.current.y = window.innerHeight / 2 - rect.top;
+                active.current = true;
+            }
 
             // --- spring position toward mouse (damped, can slightly overshoot) ---
             pos.current.vx = pos.current.vx * POS_DAMPING + (mouse.current.x - pos.current.x) * POS_STIFFNESS;
