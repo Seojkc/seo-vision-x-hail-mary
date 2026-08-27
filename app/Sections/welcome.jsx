@@ -128,7 +128,7 @@ export default function Welcome() {
             if (isMobileRef.current) return; // mobile uses the simulated center mouse instead
             const rect = maskEl.getBoundingClientRect();
             mouse.current.x = e.clientX - rect.left;
-            mouse.current.y = e.clientY - rect.top;
+            mouse.current.y = e.clientY - (rect.top);
             active.current = true;
         };
         const handleLeave = () => {
@@ -148,7 +148,7 @@ export default function Welcome() {
             if (isMobileRef.current) {
                 const rect = maskEl.getBoundingClientRect();
                 mouse.current.x = window.innerWidth / 2 - rect.left;
-                mouse.current.y = window.innerHeight / 2 - rect.top;
+                mouse.current.y = window.innerHeight / 2 - (rect.top+150);
                 active.current = true;
             }
 
