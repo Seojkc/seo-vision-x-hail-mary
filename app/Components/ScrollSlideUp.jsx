@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export default function ScrollSlideUp({
   children,
   className = "",
-  threshold = 0.2,
+  threshold = 0.5,
   duration = 1000,
   delay = 0,
   distance = "translate-y-20",

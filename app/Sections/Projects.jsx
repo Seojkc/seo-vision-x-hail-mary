@@ -291,150 +291,189 @@ function TypewriterHeading() {
             {/* ---- CHANGED: added justify-center so the whole stack sits
                  vertically centered in the pinned screen on mobile, instead
                  of hugging the top ---- */}
-            <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-center md:justify-start px-6 md:px-16">
+            <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-center md:justify-start px-6 md:px-16 pt-[30%] md:pt-0">
               {/* ---- IMAGE ----
                  CHANGED: h-[38vh] -> h-[30vh] on mobile, plus overflow-hidden
                  so a card can never visually bleed into the details block
                  below it even mid-transition. Desktop (md:) untouched. */}
-              <div className="relative w-full md:w-[35%] h-[22vh] md:h-[70vh] flex items-start md:items-center justify-center shrink-0 overflow-hidden md:overflow-visible">
-                <div
-                  className="absolute inset-0 flex items-start md:items-center justify-center p-2 md:p-5"
-                  style={{
-                    opacity: p1.opacity,
-                    transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
-                    willChange: "transform, opacity",
-                  }}
-                >
-                  {/* CHANGED: constrain image to the column's own height
-                     with object-contain so it can never overflow it */}
-                 <Image
-                    alt={project1.title}
-                    width={1080}
-                    height={1080}
-                    className="w-auto h-full max-w-full object-contain md:w-full md:h-auto"
-                    src={project1.image}
-                  />
-                </div>
-  
-                <div
-                  className="absolute inset-0 flex items-start md:items-center justify-center p-2 md:p-5"
-                  style={{
-                    opacity: p2.opacity,
-                    transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
-                    willChange: "transform, opacity",
-                  }}
-                >
-                  <Image
-                    alt={project2.title}
-                    width={1080}
-                    height={1080}
-                    className="w-auto h-full max-w-full object-contain md:w-full md:h-auto"
-                    src={project2.image}
-                  />
-                </div>
-              </div>
-  
-              {/* ---- DETAILS ----
-                 CHANGED: h-[42vh] -> h-[46vh] on mobile (a little more
-                 breathing room now that the image column is smaller),
-                 plus overflow-hidden as the same safety net. */}
-              <div className="relative flex-1 w-full h-[46vh] md:h-[70vh] overflow-hidden md:overflow-visible">
-                {/* CARD 1 details */}
-                <div
-                  className="absolute inset-0 flex items-center z-10"
-                  style={{
-                    opacity: p1.opacity,
-                    transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
-                    willChange: "transform, opacity",
-                  }}
-                >
-                  <a href={project1.href}
-                    onMouseEnter={() => setHovered1(true)}
-                    onMouseLeave={() => setHovered1(false)}
-                    className="group relative block p-4 md:p-6 min-h-0 md:min-h-[220px] mx-[6%] md:mx-[10%] w-full">
-                    <span className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
-                    <span className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
-                    <span className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
-                    <span className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
-                    
-                    
-                    <div className="relative z-10 flex flex-col h-full">
-                      <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
-                        <span>PRJ-{project1.code}</span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: project1.status === "live" ? "#0f6b64" : "transparent", border: project1.status === "live" ? "none" : "1px solid #292929" }} />
-                          {project1.status === "live" ? "LIVE" : "ARCHIVED"}
-                        </span>
-                      </div>
-                      <h3 className="mt-2 md:mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
-                        {project1.title}
-                      </h3>
-                      <p ref={headingRef} className={`reveal-wipe ${headingVisible ? "is-visible" : ""} mt-2 pt-1 md:pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1`}>
-                      {project1.desc}
-                      </p>
-                      <div className="mt-2 md:mt-5 flex items-center justify-between">
-                      <div className="flex gap-4 md:gap-7 flex-wrap">
-                          {project1.tags.map((tag) => (
-                            <span key={tag} className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70" style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}>
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                        <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
-                          VIEW <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                </div>
-  
-                {/* CARD 2 details */}
-                <div
-                    className="absolute inset-0 flex items-start md:items-center z-10 pt-2 md:pt-0"
-                    style={{
-                    opacity: p2.opacity,
-                    transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
-                    willChange: "transform, opacity",
-                  }}
-                >
-                  <a href={project2.href}
-                    onMouseEnter={() => setHovered2(true)}
-                    onMouseLeave={() => setHovered2(false)}
-                    className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full">
-                    <span className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
-                    <span className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
-                    <span className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
-                    <span className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
-                    <div className="relative z-10 flex flex-col h-full">
-                      <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
-                        <span>PRJ-{project2.code}</span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: project2.status === "live" ? "#0f6b64" : "transparent", border: project2.status === "live" ? "none" : "1px solid #292929" }} />
-                          {project2.status === "live" ? "LIVE" : "ARCHIVED"}
-                        </span>
-                      </div>
-                      <h3 className="mt-4 md:mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
-                        {project2.title}
-                      </h3>
-                      <p className="mt-2 pt-3 md:pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1">
-                        {project2.desc}
-                      </p>
-                      <div className="mt-3 md:mt-5 flex items-center justify-between">
-                        <div className="flex gap-4 md:gap-7 flex-wrap">
-                          {project2.tags.map((tag) => (
-                            <span key={tag} className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70" style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}>
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                        <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
-                          VIEW <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                </div>
-              </div>
+
+
+<div className="relative w-full  md:w-[35%] h-[32vh] md:h-[70vh] flex items-end md:items-center justify-center shrink-0 overflow-hidden md:overflow-visible">
+  {/* CARD 1 IMAGE */}
+  <div
+    className="absolute inset-0 flex items-end md:items-center justify-center"
+    style={{
+      opacity: p1.opacity,
+      transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
+      willChange: "transform, opacity",
+    }}
+  >
+    <Image
+      alt={project1.title}
+      width={1080}
+      height={1080}
+      className="w-auto h-[95%] max-w-[90%] object-contain md:w-full md:h-auto md:max-w-none"
+      src={project1.image}
+    />
+  </div>
+
+  {/* CARD 2 IMAGE */}
+  <div
+    className="absolute inset-0 flex items-end md:items-center justify-center"
+    style={{
+      opacity: p2.opacity,
+      transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
+      willChange: "transform, opacity",
+    }}
+  >
+    <Image
+      alt={project2.title}
+      width={1080}
+      height={1080}
+      className="w-auto h-[95%] max-w-[90%] object-contain md:w-full md:h-auto md:max-w-none"
+      src={project2.image}
+    />
+  </div>
+</div>
+
+{/* ---- DETAILS ----
+   CHANGED: height reduced to 46vh (freed up from the bigger image
+   box above it) — still items-start/pt-2 from before so text stays
+   flush at the top of its space with no re-introduced gap. */}
+<div className="relative flex-1 w-full h-[46vh] md:h-[70vh] overflow-hidden md:overflow-visible">
+  {/* ===== CARD 1 — Money Compass ===== */}
+  <div
+    className="absolute inset-0 flex items-start md:items-center z-10 pt-2 md:pt-0"
+    style={{
+      opacity: p1.opacity,
+      transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
+      willChange: "transform, opacity",
+    }}
+  >
+    <a href={project1.href}
+      onMouseEnter={() => setHovered1(true)}
+      onMouseLeave={() => setHovered1(false)}
+      className="group relative block p-4 md:p-6 min-h-0 md:min-h-[220px] mx-[6%] md:mx-[10%] w-full">
+
+      <span className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+      <span className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+      <span className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+      <span className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
+          <span>PRJ-{project1.code}</span>
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                background: project1.status === "live" ? "#0f6b64" : "transparent",
+                border: project1.status === "live" ? "none" : "1px solid #292929",
+              }}
+            />
+            {project1.status === "live" ? "LIVE" : "ARCHIVED"}
+          </span>
+        </div>
+
+        <h3 className="mt-2 md:mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
+          {project1.title}
+        </h3>
+
+        <p
+          ref={headingRef}
+          className={`reveal-wipe ${headingVisible ? "is-visible" : ""}
+           mt-2 pt-1 md:pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1`}
+        >
+          {project1.desc}
+        </p>
+
+        <div className="mt-2 md:mt-5 flex items-center justify-between">
+          <div className="flex gap-4 md:gap-7 flex-wrap">
+            {project1.tags.map((tag) => (
+              <span
+                key={tag}
+                className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70"
+                style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
+            VIEW
+            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          </span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  {/* ===== CARD 2 — Arrive Alert ===== */}
+  <div
+    className="absolute inset-0 flex items-start md:items-center z-20 pt-2 md:pt-0"
+    style={{
+      opacity: p2.opacity,
+      transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
+      willChange: "transform, opacity",
+    }}
+  >
+    <a href={project2.href}
+      onMouseEnter={() => setHovered2(true)}
+      onMouseLeave={() => setHovered2(false)}
+      className="group relative block p-4 md:p-6 min-h-0 md:min-h-[220px] mx-[6%] md:mx-[10%] w-full"
+    >
+      <span className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+      <span className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+      <span className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+      <span className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
+          <span>PRJ-{project2.code}</span>
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                background: project2.status === "live" ? "#0f6b64" : "transparent",
+                border: project2.status === "live" ? "none" : "1px solid #292929",
+              }}
+            />
+            {project2.status === "live" ? "LIVE" : "ARCHIVED"}
+          </span>
+        </div>
+
+        <h3 className="mt-2 md:mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
+          {project2.title}
+        </h3>
+
+        <p className="mt-2 pt-1 md:pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1">
+          {project2.desc}
+        </p>
+
+        <div className="mt-2 md:mt-5 flex items-center justify-between">
+          <div className="flex gap-4 md:gap-7 flex-wrap">
+            {project2.tags.map((tag) => (
+              <span
+                key={tag}
+                className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70"
+                style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
+            VIEW
+            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          </span>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+
+
             </div>
           </div>
         </section>
