@@ -497,12 +497,20 @@ useEffect(() => {
             style={{ background: "linear-gradient(to bottom,rgb(12, 12, 12), transparent 30%)" }}
           />
           <div
-            className="absolute inset-x-0 top-0 h-400"
+            className="absolute inset-x-0 top-0 h-400 hidden md:block"
             style={{ background: "linear-gradient(to right,rgb(12, 12, 12), transparent 30%)" }}
           />
           <div
-            className="absolute inset-x-0 top-0 h-400"
+            className="absolute inset-x-0 top-0 h-400 hidden md:block"
             style={{ background: "linear-gradient(to left,rgb(12, 12, 12), transparent 30%)" }}
+          />
+          <div
+            className="absolute inset-x-0 top-0 h-400  block md:hidden"
+            style={{ background: "linear-gradient(to right,rgb(12, 12, 12), transparent 10%)" }}
+          />
+          <div
+            className="absolute inset-x-0 top-0 h-400   block md:hidden"
+            style={{ background: "linear-gradient(to left,rgb(12, 12, 12), transparent 10%)" }}
           />
         </div>
 

@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import useScrollReveal from "../Components/useScrollReveal"
+import useScrollReveal from "../Components/useScrollReveal";
+import ScrollSlideUp from "../Components/ScrollSlideUp"
 
 /* =========================================================================
    HELPERS
@@ -140,390 +141,303 @@ function TypewriterHeading() {
      details half, so they move in lockstep.
    ========================================================================= */
 
-export default function Projects() {
-  /* ---- project 1 ---- */
-  const project1 = {
-    code: "01",
-    title: "Money Compass",
-    desc: "A modern personal finance app that turns everyday spending into clear insights, helping users budget smarter and stay in control of their money.",
-    tags: ["React", "Python", "TypeScript", "Postgres", "Tailwind CSS"],
-    status: "live", // "live" | "archived"
-    href: "https://money-compass-navy.vercel.app/",
-    image: "/Assets/projects/project-1-1.png",
-  };
-
-  /* ---- project 2 ---- */
-  const project2 = {
-    code: "02",
-    title: "Arrive Alert",
-    desc: "Arrive Alert is a smart notification platform designed to help users stay informed about important arrivals and events with timely, reliable alerts.",
-    tags: ["React Native", "Kotlin", "Ruby", "Swift", "Python"],
-    status: "live",
-    href: "https://github.com/Seojkc/GPSAlarmApp",
-    image: "/Assets/projects/project-2-1.png",
-  };
-
-  /* ---- pinned-scroll progress ----
-     Driven manually with fixed/absolute instead of CSS `position: sticky`.
-     `sticky` silently stops pinning if ANY ancestor (layout wrapper, body,
-     an earlier section) has overflow set to anything but visible — e.g. a
-     stray `overflow-x-hidden` used elsewhere on the page, which per spec
-     forces overflow-y to compute as `auto` and detaches sticky from the
-     window scroll. Doing the pin ourselves has no such dependency. */
-  const wrapperRef = useRef(null);
-  const [progress, setProgress] = useState(0);
-  const [pinState, setPinState] = useState("before"); // "before" | "pinned" | "after"
-
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-
-    let raf = null;
-
-    const measure = () => {
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const total = el.offsetHeight - vh; // scroll distance available for the pin
-      if (total <= 0) {
-        setPinState("before");
-        setProgress(0);
-        return;
-      }
-
-      if (rect.top > 0) {
-        setPinState("before");
-        setProgress(0);
-      } else if (rect.bottom <= vh) {
-        setPinState("after");
-        setProgress(1);
-      } else {
-        setPinState("pinned");
-        setProgress(clamp01(-rect.top / total));
-      }
+   export default function Projects() {
+    const project1 = { /* unchanged */ 
+      code: "01", title: "Money Compass",
+      desc: "A modern personal finance app that turns everyday spending into clear insights, helping users budget smarter and stay in control of their money.",
+      tags: ["React", "Python", "TypeScript", "Postgres", "Tailwind CSS"],
+      status: "live", href: "https://money-compass-navy.vercel.app/",
+      image: "/Assets/projects/project-1-1.png",
     };
-
-    const onScroll = () => {
-      if (raf) cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(measure);
+    const project2 = { /* unchanged */
+      code: "02", title: "Arrive Alert",
+      desc: "Arrive Alert is a smart notification platform designed to help users stay informed about important arrivals and events with timely, reliable alerts.",
+      tags: ["React Native", "Kotlin", "Ruby", "Swift", "Python"],
+      status: "live", href: "https://github.com/Seojkc/GPSAlarmApp",
+      image: "/Assets/projects/project-2-1.png",
     };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    measure();
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  const P1_END = 0.28; // shrink-to-center ends
-  const P2_END = 0.48; // slide-swap ends
-  const P3_END = 0.85; // grow-to-final ends, hold begins
   
-  const SHRINK_SCALE = 0.5;   // scale both cards sit at during the swap
-  const SLIDE_DISTANCE = 50;
-
-  function computeStates(t) {
-    let p1 = { scale: 1, opacity: 1, translateY: 0 };
-  let p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: SLIDE_DISTANCE };
-
-  if (t <= P1_END) {
-    // PHASE A — project 1 shrinks toward center
-    const a = clamp01(t / P1_END);
-    p1 = { scale: lerp(1, SHRINK_SCALE, a), opacity: 1, translateY: 0 };
-    p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: SLIDE_DISTANCE };
-  } else if (t <= P2_END) {
-    // PHASE B — project 1 slides straight up and out while project 2
-    // slides straight up into place, at a constant SLIDE_DISTANCE apart
-    const b = clamp01((t - P1_END) / (P2_END - P1_END));
-    p1 = {
-      scale: SHRINK_SCALE,
-      opacity: 1,
-      translateY: lerp(0, -SLIDE_DISTANCE, b),
-    };
-    p2 = {
-      scale: SHRINK_SCALE,
-      opacity: 1,
-      translateY: lerp(SLIDE_DISTANCE, 0, b),
-    };
-  } else if (t <= P3_END) {
-    // PHASE C — project 2 grows up to its final position
-    const c = clamp01((t - P2_END) / (P3_END - P2_END));
-    p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -SLIDE_DISTANCE };
-    p2 = { scale: lerp(SHRINK_SCALE, 1, c), opacity: 1, translateY: 0 };
-  } else {
-    // PHASE D — hold at final position (scroll buffer)
-    p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -SLIDE_DISTANCE };
-    p2 = { scale: 1, opacity: 1, translateY: 0 };
-  }
-
-  return { p1, p2 };
-  }
-
-  const { p1, p2 } = computeStates(progress);
-
-  /* ---- hover state, one per card ---- */
-  const [hovered1, setHovered1] = useState(false);
-  const [hovered2, setHovered2] = useState(false);
-  const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
-
-  return (
-    <div className="bg-[#0c0c0c] min-h-screen pb-[10vh]">
-      <div className="relative text-center py-30 overflow-hidden">
-        <TypewriterHeading />
-      </div>
-
-      <div className="flex px-[5%] items-center pt-[2vw] justify-between mb-10 font-mono text-[12px] tracking-[0.2em] text-[#C4C4C4]/60">
-        <span className="bree-serif-regular text-[16px] tracking-normal text-[#C4C4C4]">
-          Selected Work
-        </span>
-        <span>02 TRANSMISSIONS</span>
-      </div>
-
-      {/* ================= PINNED SCROLL STACK (inlined) ================= */}
-      <section ref={wrapperRef} className="relative bg-[#0c0c0c]" style={{ height: "400vh" }}>
-        <div
-          className="h-screen overflow-hidden bg-[#0c0c0c]"
-          style={{
-            perspective: "1600px",
-            position: pinState === "pinned" ? "fixed" : "absolute",
-            top: pinState === "after" ? "auto" : 0,
-            bottom: pinState === "after" ? 0 : "auto",
-            left: 0,
-            right: 0,
-          }}
-        >
-          {/* dotted grid background — stays put for the whole pin */}
+    const wrapperRef = useRef(null);
+    const [progress, setProgress] = useState(0);
+    const [pinState, setPinState] = useState("before");
+  
+    /* ---- NEW: track mobile vs desktop so animation distances stay
+       relative to each column's actual height instead of the viewport ---- */
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+      const check = () => setIsMobile(window.innerWidth < 768);
+      check();
+      window.addEventListener("resize", check);
+      return () => window.removeEventListener("resize", check);
+    }, []);
+  
+    useEffect(() => {
+      const el = wrapperRef.current;
+      if (!el) return;
+      let raf = null;
+      const measure = () => {
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const total = el.offsetHeight - vh;
+        if (total <= 0) {
+          setPinState("before");
+          setProgress(0);
+          return;
+        }
+        if (rect.top > 0) {
+          setPinState("before");
+          setProgress(0);
+        } else if (rect.bottom <= vh) {
+          setPinState("after");
+          setProgress(1);
+        } else {
+          setPinState("pinned");
+          setProgress(clamp01(-rect.top / total));
+        }
+      };
+      const onScroll = () => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(measure);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+      measure();
+      return () => {
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+        if (raf) cancelAnimationFrame(raf);
+      };
+    }, []);
+  
+    const P1_END = 0.28;
+    const P2_END = 0.48;
+    const P3_END = 0.85;
+  
+    const SHRINK_SCALE = 0.5;
+    /* ---- CHANGED: was a flat 50 (vh). On mobile each column is only
+       ~38-42vh tall, so a 50vh slide spilled into the neighboring column.
+       Desktop keeps the exact same 50 as before. ---- */
+    const SLIDE_DISTANCE = isMobile ? 14 : 50;
+  
+    function computeStates(t) {
+      let p1 = { scale: 1, opacity: 1, translateY: 0 };
+      let p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: SLIDE_DISTANCE };
+  
+      if (t <= P1_END) {
+        const a = clamp01(t / P1_END);
+        p1 = { scale: lerp(1, SHRINK_SCALE, a), opacity: 1, translateY: 0 };
+        p2 = { scale: SHRINK_SCALE, opacity: 0, translateY: SLIDE_DISTANCE };
+      } else if (t <= P2_END) {
+        const b = clamp01((t - P1_END) / (P2_END - P1_END));
+        p1 = { scale: SHRINK_SCALE, opacity: 1, translateY: lerp(0, -SLIDE_DISTANCE, b) };
+        p2 = { scale: SHRINK_SCALE, opacity: 1, translateY: lerp(SLIDE_DISTANCE, 0, b) };
+      } else if (t <= P3_END) {
+        const c = clamp01((t - P2_END) / (P3_END - P2_END));
+        p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -SLIDE_DISTANCE };
+        p2 = { scale: lerp(SHRINK_SCALE, 1, c), opacity: 1, translateY: 0 };
+      } else {
+        p1 = { scale: SHRINK_SCALE, opacity: 0, translateY: -SLIDE_DISTANCE };
+        p2 = { scale: 1, opacity: 1, translateY: 0 };
+      }
+      return { p1, p2 };
+    }
+  
+    const { p1, p2 } = computeStates(progress);
+    const [hovered1, setHovered1] = useState(false);
+    const [hovered2, setHovered2] = useState(false);
+    const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
+  
+    return (
+      <div className="bg-[#0c0c0c] min-h-screen pb-[10vh]">
+        <div className="relative text-center py-30 overflow-hidden hidden md:block">
+          <TypewriterHeading />
+        </div>
+  
+        <ScrollSlideUp className="relative text-center py-30 overflow-hidden md:hidden block text-start pl-10">
+          <h1 className="text-[25vw] text-white/80">
+            Built <span className="text-[8vw] text-white/50"> From</span>{" "}
+          </h1>
+          <h1 className="text-[23vw] text-elegant-red">Scratch</h1>
+        </ScrollSlideUp>
+  
+        <ScrollSlideUp delay={50}>
+          <div className="flex px-[5%] items-center pt-[2vw] justify-between mb-10 font-mono text-[12px] tracking-[0.2em] text-[#C4C4C4]/60">
+            <span className="bree-serif-regular text-[16px] tracking-normal text-[#C4C4C4]">
+              Selected Work
+            </span>
+            <span>02 TRANSMISSIONS</span>
+          </div>
+        </ScrollSlideUp>
+  
+        <section ref={wrapperRef} className="relative bg-[#0c0c0c]" style={{ height: "400vh" }}>
           <div
-            className="pointer-events-none absolute inset-0"
+            className="h-screen overflow-hidden bg-[#0c0c0c]"
             style={{
-              backgroundImage: `
-                linear-gradient(to right, rgba(200, 200, 200, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(200, 200, 200, 0.05) 1px, transparent 1px)
-              `,
-              backgroundSize: "98px 98px",
+              perspective: "1600px",
+              position: pinState === "pinned" ? "fixed" : "absolute",
+              top: pinState === "after" ? "auto" : 0,
+              bottom: pinState === "after" ? 0 : "auto",
+              left: 0,
+              right: 0,
             }}
-          />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(to bottom,#0c0c0c, transparent 10%, transparent)" }}
-          />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(to right,#0c0c0c, transparent 30%, transparent)" }}
-          />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(to top,#0c0c0c, transparent 30%, transparent)" }}
-          />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(to left,#0c0c0c, transparent 30%, transparent)" }}
-          />
-
-          <div className="relative z-10 h-full flex flex-col md:flex-row items-center px-6 md:px-16">
-            {/* ---- IMAGE (always left) ---- */}
-            <div className="relative w-full md:w-[35%] h-[38vh] md:h-[70vh] flex items-center justify-center shrink-0">
-              {/* CARD 1 IMAGE */}
-              <div
-                className="absolute inset-0 flex items-center justify-center p-5"
-                style={{
-                  opacity: p1.opacity,
-                  transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
-                  willChange: "transform, opacity",
-                }}
-              >
-                <Image
-                  alt={project1.title}
-                  width={1080}
-                  height={1080}
-                  className="w-full h-auto"
-                  src={project1.image}
-                />
-              </div>
-
-              {/* CARD 2 IMAGE */}
-              <div
-                className="absolute inset-0 flex items-center justify-center p-5"
-                style={{
-                  opacity: p2.opacity,
-                  transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
-                  willChange: "transform, opacity",
-                }}
-              >
-                <Image
-                  alt={project2.title}
-                  width={1080}
-                  height={1080}
-                  className="w-full h-auto"
-                  src={project2.image}
-                />
-              </div>
-            </div>
-
-            {/* ---- DETAILS (always right) ---- */}
-            <div className="relative flex-1 w-full h-[42vh] md:h-[70vh]">
-              {/* ===== CARD 1 — Money Compass ===== */}
-              <div
-                className="absolute inset-0 flex items-center z-10"
-                style={{
-                  opacity: p1.opacity,
-                  transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
-                  willChange: "transform, opacity",
-                }}
-              >
-                
-               <a href={project1.href}
-                  onMouseEnter={() => setHovered1(true)}
-                  onMouseLeave={() => setHovered1(false)}
-                  className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full">
-
-                  <span
-                    className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }}
-                  />
-                  <span
-                    className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }}
-                  />
-                  <span
-                    className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }}
-                  />
-                  <span
-                    className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }}
-                  />
-
-                  <div className="relative z-10 flex flex-col h-full">
-                    <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
-                      <span>PRJ-{project1.code}</span>
-                      <span className="flex items-center gap-1.5">
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{
-                            background: project1.status === "live" ? "#0f6b64" : "transparent",
-                            border: project1.status === "live" ? "none" : "1px solid #292929",
-                          }}
-                        />
-                        {project1.status === "live" ? "LIVE" : "ARCHIVED"}
-                      </span>
-                    </div>
-
-                    <h3 className="mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
-                      {project1.title}
-                    </h3>
-
-                    <p
-                      ref={headingRef}
-                      className={`reveal-wipe ${headingVisible ? "is-visible" : ""}
-                       mt-2 pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1`}
-                    >
-                      {project1.desc}
-                    </p>
-
-                    <div className="mt-5 flex items-center justify-between">
-                      <div className="flex gap-4 md:gap-7 flex-wrap">
-                        {project1.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70"
-                            style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
-                        VIEW
-                        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                      </span>
-                    </div>
-                  </div>
-                </a>
-              </div>
-
-              {/* ===== CARD 2 — Arrive Alert ===== */}
-              <div
-                className="absolute inset-0 flex items-center z-20"
-                style={{
-                  opacity: p2.opacity,
-                  transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
-                  willChange: "transform, opacity",
-                }}
-              >
-                
-                <a  href={project2.href}
-                  onMouseEnter={() => setHovered2(true)}
-                  onMouseLeave={() => setHovered2(false)}
-                  className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full"
+          >
+            {/* background grid/gradients unchanged */}
+            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: `linear-gradient(to right, rgba(200, 200, 200, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(200, 200, 200, 0.05) 1px, transparent 1px)`, backgroundSize: "98px 98px" }} />
+            <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to bottom,#0c0c0c, transparent 10%, transparent)" }} />
+            <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to right,#0c0c0c, transparent 30%, transparent)" }} />
+            <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to top,#0c0c0c, transparent 30%, transparent)" }} />
+            <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to left,#0c0c0c, transparent 30%, transparent)" }} />
+  
+            {/* ---- CHANGED: added justify-center so the whole stack sits
+                 vertically centered in the pinned screen on mobile, instead
+                 of hugging the top ---- */}
+            <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-center md:justify-start px-6 md:px-16">
+              {/* ---- IMAGE ----
+                 CHANGED: h-[38vh] -> h-[30vh] on mobile, plus overflow-hidden
+                 so a card can never visually bleed into the details block
+                 below it even mid-transition. Desktop (md:) untouched. */}
+              <div className="relative w-full md:w-[35%] h-[22vh] md:h-[70vh] flex items-start md:items-center justify-center shrink-0 overflow-hidden md:overflow-visible">
+                <div
+                  className="absolute inset-0 flex items-start md:items-center justify-center p-2 md:p-5"
+                  style={{
+                    opacity: p1.opacity,
+                    transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
+                    willChange: "transform, opacity",
+                  }}
                 >
-                  <span
-                    className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }}
+                  {/* CHANGED: constrain image to the column's own height
+                     with object-contain so it can never overflow it */}
+                 <Image
+                    alt={project1.title}
+                    width={1080}
+                    height={1080}
+                    className="w-auto h-full max-w-full object-contain md:w-full md:h-auto"
+                    src={project1.image}
                   />
-                  <span
-                    className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }}
+                </div>
+  
+                <div
+                  className="absolute inset-0 flex items-start md:items-center justify-center p-2 md:p-5"
+                  style={{
+                    opacity: p2.opacity,
+                    transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
+                    willChange: "transform, opacity",
+                  }}
+                >
+                  <Image
+                    alt={project2.title}
+                    width={1080}
+                    height={1080}
+                    className="w-auto h-full max-w-full object-contain md:w-full md:h-auto"
+                    src={project2.image}
                   />
-                  <span
-                    className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }}
-                  />
-                  <span
-                    className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5"
-                    style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }}
-                  />
-
-                  <div className="relative z-10 flex flex-col h-full">
-                    <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
-                      <span>PRJ-{project2.code}</span>
-                      <span className="flex items-center gap-1.5">
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{
-                            background: project2.status === "live" ? "#0f6b64" : "transparent",
-                            border: project2.status === "live" ? "none" : "1px solid #292929",
-                          }}
-                        />
-                        {project2.status === "live" ? "LIVE" : "ARCHIVED"}
-                      </span>
-                    </div>
-
-                    <h3 className="mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
-                      {project2.title}
-                    </h3>
-
-                    <p className="mt-2 pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1">
-                      {project2.desc}
-                    </p>
-
-                    <div className="mt-5 flex items-center justify-between">
-                      <div className="flex gap-4 md:gap-7 flex-wrap">
-                        {project2.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70"
-                            style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                </div>
+              </div>
+  
+              {/* ---- DETAILS ----
+                 CHANGED: h-[42vh] -> h-[46vh] on mobile (a little more
+                 breathing room now that the image column is smaller),
+                 plus overflow-hidden as the same safety net. */}
+              <div className="relative flex-1 w-full h-[46vh] md:h-[70vh] overflow-hidden md:overflow-visible">
+                {/* CARD 1 details */}
+                <div
+                  className="absolute inset-0 flex items-center z-10"
+                  style={{
+                    opacity: p1.opacity,
+                    transform: `translateY(${p1.translateY}vh) scale(${p1.scale})`,
+                    willChange: "transform, opacity",
+                  }}
+                >
+                  <a href={project1.href}
+                    onMouseEnter={() => setHovered1(true)}
+                    onMouseLeave={() => setHovered1(false)}
+                    className="group relative block p-4 md:p-6 min-h-0 md:min-h-[220px] mx-[6%] md:mx-[10%] w-full">
+                    <span className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+                    <span className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+                    <span className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+                    <span className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered1 ? "#0f6b64" : "#292929" }} />
+                    
+                    
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
+                        <span>PRJ-{project1.code}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: project1.status === "live" ? "#0f6b64" : "transparent", border: project1.status === "live" ? "none" : "1px solid #292929" }} />
+                          {project1.status === "live" ? "LIVE" : "ARCHIVED"}
+                        </span>
                       </div>
-                      <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
-                        VIEW
-                        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                      </span>
+                      <h3 className="mt-2 md:mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
+                        {project1.title}
+                      </h3>
+                      <p ref={headingRef} className={`reveal-wipe ${headingVisible ? "is-visible" : ""} mt-2 pt-1 md:pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1`}>
+                      {project1.desc}
+                      </p>
+                      <div className="mt-2 md:mt-5 flex items-center justify-between">
+                      <div className="flex gap-4 md:gap-7 flex-wrap">
+                          {project1.tags.map((tag) => (
+                            <span key={tag} className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70" style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
+                          VIEW <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </a>
+                  </a>
+                </div>
+  
+                {/* CARD 2 details */}
+                <div
+                    className="absolute inset-0 flex items-start md:items-center z-10 pt-2 md:pt-0"
+                    style={{
+                    opacity: p2.opacity,
+                    transform: `translateY(${p2.translateY}vh) scale(${p2.scale})`,
+                    willChange: "transform, opacity",
+                  }}
+                >
+                  <a href={project2.href}
+                    onMouseEnter={() => setHovered2(true)}
+                    onMouseLeave={() => setHovered2(false)}
+                    className="group relative block p-6 min-h-[220px] mx-[6%] md:mx-[10%] w-full">
+                    <span className="pointer-events-none absolute top-0 left-0 w-3 h-3 border-t border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+                    <span className="pointer-events-none absolute top-0 right-0 w-3 h-3 border-t border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+                    <span className="pointer-events-none absolute bottom-0 left-0 w-3 h-3 border-b border-l transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+                    <span className="pointer-events-none absolute bottom-0 right-0 w-3 h-3 border-b border-r transition-all duration-300 group-hover:w-5 group-hover:h-5" style={{ borderColor: hovered2 ? "#0f6b64" : "#292929" }} />
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="flex items-center justify-between font-mono text-[11px] tracking-widest text-[#C4C4C4]/60">
+                        <span>PRJ-{project2.code}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: project2.status === "live" ? "#0f6b64" : "transparent", border: project2.status === "live" ? "none" : "1px solid #292929" }} />
+                          {project2.status === "live" ? "LIVE" : "ARCHIVED"}
+                        </span>
+                      </div>
+                      <h3 className="mt-4 md:mt-6 text-[6vw] md:text-[2.6vw] bodoni-moda-regular font-semibold text-[#C4C4C4] tracking-tight">
+                        {project2.title}
+                      </h3>
+                      <p className="mt-2 pt-3 md:pt-6 text-[3.4vw] md:text-[1vw] leading-relaxed text-[#C4C4C4]/70 flex-1">
+                        {project2.desc}
+                      </p>
+                      <div className="mt-3 md:mt-5 flex items-center justify-between">
+                        <div className="flex gap-4 md:gap-7 flex-wrap">
+                          {project2.tags.map((tag) => (
+                            <span key={tag} className="bodoni-moda-regular text-[3vw] md:text-[1vw] tracking-wide px-2 py-1 text-[#C4C4C4]/70" style={{ border: "1px solid rgba(196, 196, 196,0.3)" }}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="font-mono text-[12px] text-[#0f6b64] flex items-center gap-1 shrink-0">
+                          VIEW <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-    </div>
-  );
-}
+        </section>
+      </div>
+    );
+  }
