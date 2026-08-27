@@ -591,7 +591,8 @@ useEffect(() => {
                 z-21
                 translate-x-[50%]
                 -translate-y-1/2
-                w-[900px]
+                md:w-[900px]
+                w-screen
                 h-[550px]
             "
         />
