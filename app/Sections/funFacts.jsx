@@ -1,11 +1,29 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, useCallback  } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import useScrollReveal from "../Components/useScrollReveal"
 import CurvedText from "../Components/CurvedText";
+
 /* =========================================================================
-   Skills marquee (unchanged from your original)
+   Mobile breakpoint hook
+   ========================================================================= */
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+/* =========================================================================
+   Skills marquee (unchanged)
    ========================================================================= */
 function SkillsMarquee() {
   const skills = [
@@ -58,7 +76,7 @@ function SkillsMarquee() {
   }, []);
 
   return (
-    <div className="relative w-full p-[20px] pt-[100px]">
+    <div className="relative w-full p-[10px] pt-[50px] md:p-[20px] md:pt-[100px]">
       <div className="absolute mt-8 mb-[50px] inset-0 flex items-center justify-center">
         <div style={{ transform: "rotate(0deg)" }}>
           <div
@@ -66,8 +84,8 @@ function SkillsMarquee() {
             className="flex w-max flex-nowrap animate-marquee-left"
           >
             {loopItems.map((skill, i) => (
-              <span key={i} className="mx-8 flex items-center flex-shrink-0">
-                <span className="text-[#0c0c0c]  text-6xl md:text-6xl font-black tracking-tight">
+              <span key={i} className="mx-4 md:mx-8 flex items-center flex-shrink-0">
+                <span className="text-[#0c0c0c] text-3xl md:text-6xl font-black tracking-tight">
                   {skill}
                 </span>
               </span>
@@ -81,18 +99,20 @@ function SkillsMarquee() {
 
 /* =========================================================================
    ScaledScene
-   -------------------------------------------------------------------------
-   Every prop/decoration inside the scene is positioned with fixed pixel
-   coordinates against a fixed-size "canvas" (SCENE_WIDTH x SCENE_HEIGHT).
-   On resize we only ever change a single uniform `scale` factor applied to
-   that canvas — so every item shrinks together and NEVER changes position
-   relative to the others, and (as long as the base layout doesn't overlap)
-   nothing can ever start overlapping at any viewport width.
    ========================================================================= */
 const SCENE_WIDTH = 1600;
 const SCENE_HEIGHT = 860;
 
-function ScaledScene({ children, visible }) {
+const MOBILE_SCENE_WIDTH = 420;
+// Increased to fit the extra bottom padding added between mobile items
+const MOBILE_SCENE_HEIGHT = 2300;
+
+function ScaledScene({
+  children,
+  visible,
+  sceneWidth = SCENE_WIDTH,
+  sceneHeight = SCENE_HEIGHT,
+}) {
   const outerRef = useRef(null);
   const [scale, setScale] = useState(1);
 
@@ -102,25 +122,25 @@ function ScaledScene({ children, visible }) {
 
     const updateScale = () => {
       const w = el.offsetWidth;
-      setScale(Math.min(1, w / SCENE_WIDTH));
+      setScale(Math.min(1, w / sceneWidth));
     };
 
     updateScale();
     const ro = new ResizeObserver(updateScale);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [sceneWidth]);
 
   return (
     <div
       ref={outerRef}
       className="relative w-full"
-      style={{ height: SCENE_HEIGHT * scale, overflow: "hidden" }}
+      style={{ height: sceneHeight * scale, overflow: "hidden" }}
     >
       <div
         style={{
-          width: SCENE_WIDTH,
-          height: SCENE_HEIGHT,
+          width: sceneWidth,
+          height: sceneHeight,
           transform: `scale(${scale})`,
           transformOrigin: "top left",
         }}
@@ -131,9 +151,9 @@ function ScaledScene({ children, visible }) {
   );
 }
 
-/* A single decorative item: fixed x/y/w on the SCENE canvas, a staggered
-   fade-up "ease-in" entrance animation driven by `visible`, and an
-   optional small subheading caption placed above or below the image. */
+
+
+
 function SceneItem({
   x,
   y,
@@ -142,21 +162,29 @@ function SceneItem({
   delay = 0,
   visible,
   label,
-  labelPos = "bottom", // "top" | "bottom"
+  labelPos = "bottom",
   labelRotate = -2,
+  revealThreshold=0.5, // NEW: when set, this item gets its own scroll-triggered reveal at this threshold
+  slideDistance = 24, // NEW: how far it slides up on reveal (desktop keeps default 24)
   children,
 }) {
+  // Only used when revealThreshold is provided (mobile items)
+  const [ownRef, ownRevealed] = useScrollReveal({ threshold: revealThreshold ?? 1 });
+  const gateActive = revealThreshold != null;
+  const effectiveVisible = gateActive ? visible && ownRevealed : visible;
+
   return (
     <div
+      ref={gateActive ? ownRef : undefined}
       className="absolute"
       style={{
         left: x,
         top: y,
         width: w,
-        transform: visible
+        transform: effectiveVisible
           ? `translateY(0px) rotate(${rotate}deg)`
-          : `translateY(24px) rotate(${rotate}deg)`,
-        opacity: visible ? 1 : 0,
+          : `translateY(${slideDistance}px) rotate(${rotate}deg)`,
+        opacity: effectiveVisible ? 1 : 0,
         transition: `opacity 700ms ease-in ${delay}ms, transform 700ms ease-in ${delay}ms`,
       }}
     >
@@ -180,17 +208,9 @@ function SceneItem({
         </span>
       )}
 
-
       {label && labelPos === "right" && (
-        <span
-          className="scene-label"
-          
-        >
-          {label}
-        </span>
+        <span className="scene-label">{label}</span>
       )}
-
-
 
       <style jsx>{`
         .scene-label {
@@ -210,11 +230,10 @@ function SceneItem({
   );
 }
 
-/* =========================================================================
-   Coffee mug — click to sip. The "take a sip" speech bubble stays
-   permanently on screen (it eases in once the section becomes visible,
-   then never disappears).
-   ========================================================================= */
+
+
+
+/* CoffeeToggle — unchanged */
 const GIF_SRC = "/Assets/FunFact/coffee-mug-video-2.gif";
 const GIF_DURATION_MS = 1200;
 const DISPLAY_WIDTH = 150;
@@ -266,7 +285,6 @@ export function CoffeeToggle({ visible = true }) {
       className="relative cursor-pointer"
       style={{ width: DISPLAY_WIDTH, aspectRatio }}
     >
-      {/* speech bubble — eases in once, then stays put */}
       <div
         className="speech-bubble"
         style={{
@@ -280,10 +298,8 @@ export function CoffeeToggle({ visible = true }) {
         <span className="speech-bubble-tail" />
       </div>
 
-      {/* static first frame, shown when idle */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-      {/* real animated gif, only mounted while playing */}
       {isPlaying && (
         <img
           key={replayKey}
@@ -327,8 +343,7 @@ export function CoffeeToggle({ visible = true }) {
   );
 }
 
-
-const CAPTIONS = ["Amaze", "Fist my Bump","🎵","Question","it is time go"];
+const CAPTIONS = ["Amaze", "Fist my Bump", "🎵", "Question", "it is time go"];
 
 const DISTANCE_OPACITY_STOPS = [
   { distance: 5, opacity: 0.9 },
@@ -343,16 +358,15 @@ function getOpacityForDistance(distance) {
   return near.opacity + t * (far.opacity - near.opacity);
 }
 
-
 /* =========================================================================
    FunFacts
    ========================================================================= */
 export default function FunFacts() {
+  const isMobile = useIsMobile();
+
   const wrapperRef = useRef(null);
   const [visible, setVisible] = useState(false);
-  const [headingRef, headingVisible] = useScrollReveal({threshold:1})
-
-
+  const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -372,8 +386,6 @@ export default function FunFacts() {
     return () => observer.disconnect();
   }, []);
 
-
-
   const [popups, setPopups] = useState([]);
   const idRef = useRef(0);
   const intervalRef = useRef(null);
@@ -382,7 +394,6 @@ export default function FunFacts() {
   const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef(null);
 
-  // scroll-triggered slide-up + fade-in, plays once when it enters the viewport
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -391,7 +402,7 @@ export default function FunFacts() {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
-          observer.disconnect(); // remove if you want it to replay every time it re-enters
+          observer.disconnect();
         }
       },
       { threshold: 0.2 }
@@ -451,13 +462,9 @@ export default function FunFacts() {
     intervalRef.current = null;
   };
 
-
-
-
-
   return (
     <div
-      className="relative w-full pb-[20vh] pt-[30vh]"
+      className="relative w-full pb-[10vh] pt-[15vh] md:pb-[20vh] md:pt-[30vh]"
       style={{
         backgroundColor: "#f5f5f5",
         backgroundImage: `
@@ -484,227 +491,373 @@ export default function FunFacts() {
         style={{ background: "linear-gradient(to top,#F2F0EF, transparent 30%, transparent)" }}
       />
 
+      <div
+        ref={sectionRef}
+        className={`relative w-full flex justify-center items-center pt-0 pb-30 transition-all duration-700 ease-out ${
+          isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
+        }`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div ref={imageWrapperRef} className="relative animate-spin-vibrate">
+          <Image
+            width={900}
+            height={900}
+            src="/Assets/rocky.png"
+            alt="rocky amazzeee"
+            className="object-contain w-[50vw] md:w-[12vw]"
+          />
+        </div>
 
-
-
-
-
-
-
-
-<div
-      ref={sectionRef}
-      className={`relative w-full flex justify-center items-center pt-0 pb-30 transition-all duration-700 ease-out ${
-        isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
-      }`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div ref={imageWrapperRef} className="relative animate-spin-vibrate">
-        <Image
-          width={900}
-          height={900}
-          src="/Assets/rocky.png"
-          alt="rocky amazzeee"
-          className="object-contain w-[12vw]"
-        />
+        {popups.map((p) => (
+          <span
+            key={p.id}
+            className="pointer-events-none absolute left-1/2 top-1/2 select-none whitespace-nowrap font-bold text-black drop-shadow-md transition-all duration-600 ease-out"
+            style={{
+              transform: `translate(-50%, -50%) translate(${p.x}px, ${p.y}px) rotate(${p.rotate}deg) scale(${p.visible ? p.scale : p.scale * 0.5})`,
+              opacity: p.visible ? p.targetOpacity : 0,
+              fontSize: `${16 * p.scale}px`,
+            }}
+          >
+            {p.text}
+          </span>
+        ))}
       </div>
 
-      {popups.map((p) => (
-        <span
-          key={p.id}
-          className="pointer-events-none absolute left-1/2 top-1/2 select-none whitespace-nowrap font-bold text-black drop-shadow-md transition-all duration-600 ease-out"
-          style={{
-            transform: `translate(-50%, -50%) translate(${p.x}px, ${p.y}px) rotate(${p.rotate}deg) scale(${p.visible ? p.scale : p.scale * 0.5})`,
-            opacity: p.visible ? p.targetOpacity : 0,
-            fontSize: `${16 * p.scale}px`,
-          }}
-        >
-          {p.text}
-        </span>
-      ))}
-    </div>
-
-
-
-
-
-      
-
       <div ref={wrapperRef} className="relative w-full">
-        <ScaledScene visible={visible}>
-          <SceneItem
-            x={80}
-            y={80}
-            w={350}
-            delay={0}
-            visible={visible}
-            label="burning the midnight oil"
-            labelPos="bottom"
-            labelRotate={-1.5}
-          >
-            <Image
-              width={320}
-              height={500}
-              className="w-full h-auto"
-              alt="fun-fact-note"
-              src="/Assets/FunFact/night-window.png"
-            />
-          </SceneItem>
+        <ScaledScene
+          visible={visible}
+          sceneWidth={isMobile ? MOBILE_SCENE_WIDTH : SCENE_WIDTH}
+          sceneHeight={isMobile ? MOBILE_SCENE_HEIGHT : SCENE_HEIGHT}
+        >
+          {isMobile ? (
+            <>
+              {/* -------- mobile: smaller images + more bottom padding between items -------- */}
+              <SceneItem
+                x={70}
+                y={90}
+                w={260}
+                delay={0}
+                visible={visible}
+                label="burning the midnight oil"
+                labelPos="bottom"
+                labelRotate={-1.5}
+              >
+                <Image
+                  width={320}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/night-window.png"
+                />
+              </SceneItem>
 
-          <SceneItem
-            x={600}
-            y={100}
-            w={130}
-            delay={80}
-            visible={visible}
-            label="daily drivers"
-            labelPos="bottom"
-            labelRotate={2}
-          >
-            <Image
-              width={160}
-              height={500}
-              className="w-full h-auto"
-              alt="fun-fact-note"
-              src="/Assets/FunFact/claude-gpt.png"
-            />
-          </SceneItem>
+              <SceneItem
+                x={155}
+                y={440}
+                w={110}
+                delay={80}
+                visible={visible}
+                label="daily drivers"
+                labelPos="bottom"
+                labelRotate={2}
+              >
+                <Image
+                  width={160}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/claude-gpt.png"
+                />
+              </SceneItem>
 
-          <SceneItem
-            x={1250}
-            y={150}
-            w={200}
-            delay={140}
-            visible={visible}
-            label="tiny jungle"
-            labelPos="top"
-            labelRotate={-1.5}
-          >
-            <Image
-              width={250}
-              height={500}
-              className="w-full h-auto"
-              alt="fun-fact-note"
-              src="/Assets/FunFact/wall-decor-4.png"
-            />
-          </SceneItem>
+              <SceneItem
+                x={140}
+                y={700}
+                w={140}
+                delay={140}
+                visible={visible}
+                label="tiny jungle"
+                labelPos="bottom"
+                labelRotate={-1.5}
+              >
+                <Image
+                  width={250}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/wall-decor-4.png"
+                />
+              </SceneItem>
 
-          <SceneItem
-            x={1500}
-            y={90}
-            w={350}
-            rotate={-10}
-            delay={200}
-            visible={visible}
-            label="one of my ❤️"
-            labelPos="bottom"
-            labelRotate={-8}
-          >
-            <Image
-              width={300}
-              height={500}
-              className="w-full h-auto"
-              alt="fun-fact-note"
-              src="/Assets/FunFact/wall-poster-2.png"
-            />
-          </SceneItem>
+              <SceneItem
+                x={100}
+                y={980}
+                w={200}
+                rotate={-8}
+                delay={200}
+                visible={visible}
+                label="one of my ❤️"
+                labelPos="bottom"
+                labelRotate={-6}
+              >
+                <Image
+                  width={300}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/wall-poster-2.png"
+                />
+              </SceneItem>
 
-          {/* -------- bottom row: mug, bug-fix, console.log, butterfly/flowers -------- */}
-          <SceneItem x={1000} y={550} w={100} delay={260} visible={visible}>
-            <CoffeeToggle visible={visible} />
-          </SceneItem>
+              <SceneItem x={175} y={1320} w={90} delay={260} visible={visible}>
+                <CoffeeToggle visible={visible} />
+              </SceneItem>
 
-          <SceneItem
-            x={440}
-            y={610}
-            w={250}
-            rotate={-2}
-            delay={320}
-            visible={visible}
-            label="works on my machine"
-            labelPos="right"
-            labelRotate={-2}
-          >
-            <Image
-              width={220}
-              height={500}
-              className="w-full h-auto"
-              alt="fun-fact-note"
-              src="/Assets/FunFact/bug-fix.png"
-            />
-          </SceneItem>
+              <SceneItem
+                x={105}
+                y={1520}
+                w={190}
+                rotate={-2}
+                delay={320}
+                visible={visible}
+                label="works on my machine"
+                labelPos="bottom"
+                labelRotate={-2}
+              >
+                <Image
+                  width={220}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/bug-fix.png"
+                />
+              </SceneItem>
 
-          <SceneItem
-            x={200}
-            y={470}
-            w={200}
-            delay={380}
-            visible={visible}
-            label="9999+ Bugs Fixed"
-            labelPos="bottom"
-            labelRotate={2}
-          >
-            <Image
-              width={320}
-              height={500}
-              className="w-full h-auto"
-              alt="fun-fact-note"
-              src="/Assets/FunFact/console-log-1.png"
-            />
-          </SceneItem>
+              <SceneItem
+                x={100}
+                y={1800}
+                w={200}
+                delay={380}
+                visible={visible}
+                label="9999+ Bugs Fixed"
+                labelPos="bottom"
+                labelRotate={2}
+              >
+                <Image
+                  width={320}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/console-log-1.png"
+                />
+              </SceneItem>
 
-          <SceneItem
-            x={1400}
-            y={620}
-            w={200}
-            delay={440}
-            visible={visible}
-            label=""
-            labelPos="bottom"
-            labelRotate={1.5}
-          >
-            <div className="relative">
-              <Image
-                width={70}
-                height={500}
-                className="absolute z-10 -top-10 -right-10 w-[35%] h-auto butterfly-wiggle"
-                alt="butterfly"
-                src="/Assets/FunFact/butter-fly.png"
-              />
-              <Image
-                width={200}
-                height={500}
-                className="w-full h-auto -rotate-6"
-                alt="flower pot"
-                src="/Assets/FunFact/flower-pot.png"
-              />
-            </div>
-          </SceneItem>
+              <SceneItem
+                x={135}
+                y={2080}
+                w={140}
+                delay={440}
+                visible={visible}
+              >
+                <div className="relative">
+                  <Image
+                    width={70}
+                    height={500}
+                    className="absolute z-10 -top-6 -right-6 w-[35%] h-auto butterfly-wiggle"
+                    alt="butterfly"
+                    src="/Assets/FunFact/butter-fly.png"
+                  />
+                  <Image
+                    width={200}
+                    height={500}
+                    className="w-full h-auto -rotate-6"
+                    alt="flower pot"
+                    src="/Assets/FunFact/flower-pot.png"
+                  />
+                </div>
+              </SceneItem>
+            </>
+          ) : (
+            <>
+              {/* -------- desktop: unchanged -------- */}
+              <SceneItem
+                x={80}
+                y={80}
+                w={350}
+                delay={0}
+                visible={visible}
+                label="burning the midnight oil"
+                labelPos="bottom"
+                labelRotate={-1.5}
+              >
+                <Image
+                  width={320}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/night-window.png"
+                />
+              </SceneItem>
+
+              <SceneItem
+                x={600}
+                y={100}
+                w={130}
+                delay={80}
+                visible={visible}
+                label="daily drivers"
+                labelPos="bottom"
+                labelRotate={2}
+              >
+                <Image
+                  width={160}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/claude-gpt.png"
+                />
+              </SceneItem>
+
+              <SceneItem
+                x={1250}
+                y={150}
+                w={200}
+                delay={140}
+                visible={visible}
+                label="tiny jungle"
+                labelPos="top"
+                labelRotate={-1.5}
+              >
+                <Image
+                  width={250}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/wall-decor-4.png"
+                />
+              </SceneItem>
+
+              <SceneItem
+                x={1500}
+                y={90}
+                w={350}
+                rotate={-10}
+                delay={200}
+                visible={visible}
+                label="one of my ❤️"
+                labelPos="bottom"
+                labelRotate={-8}
+              >
+                <Image
+                  width={300}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/wall-poster-2.png"
+                />
+              </SceneItem>
+
+              <SceneItem x={1000} y={550} w={100} delay={260} visible={visible}>
+                <CoffeeToggle visible={visible} />
+              </SceneItem>
+
+              <SceneItem
+                x={440}
+                y={610}
+                w={250}
+                rotate={-2}
+                delay={320}
+                visible={visible}
+                label="works on my machine"
+                labelPos="right"
+                labelRotate={-2}
+              >
+                <Image
+                  width={220}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/bug-fix.png"
+                />
+              </SceneItem>
+
+              <SceneItem
+                x={200}
+                y={470}
+                w={200}
+                delay={380}
+                visible={visible}
+                label="9999+ Bugs Fixed"
+                labelPos="bottom"
+                labelRotate={2}
+              >
+                <Image
+                  width={320}
+                  height={500}
+                  className="w-full h-auto"
+                  alt="fun-fact-note"
+                  src="/Assets/FunFact/console-log-1.png"
+                />
+              </SceneItem>
+
+              <SceneItem
+                x={1400}
+                y={620}
+                w={200}
+                delay={440}
+                visible={visible}
+                label=""
+                labelPos="bottom"
+                labelRotate={1.5}
+              >
+                <div className="relative">
+                  <Image
+                    width={70}
+                    height={500}
+                    className="absolute z-10 -top-10 -right-10 w-[35%] h-auto butterfly-wiggle"
+                    alt="butterfly"
+                    src="/Assets/FunFact/butter-fly.png"
+                  />
+                  <Image
+                    width={200}
+                    height={500}
+                    className="w-full h-auto -rotate-6"
+                    alt="flower pot"
+                    src="/Assets/FunFact/flower-pot.png"
+                  />
+                </div>
+              </SceneItem>
+            </>
+          )}
         </ScaledScene>
 
         <div
           className="absolute z-20 will-change-transform transition-all ease-out"
           style={{
             left: "50%",
-            top: "36%",
+            top: isMobile ? "3%" : "36%",
             transitionDuration: "700ms",
             transform: visible
-              ? "translate(-50%, -50%) scale(1.15)"
-              : "translate(-50%, -50%) scale(0.6)",
+              ? `translate(-50%, -50%) scale(${isMobile ? 0.85 : 1.15})`
+              : `translate(-50%, -50%) scale(${isMobile ? 0.45 : 0.6})`,
             opacity: visible ? 1 : 0,
           }}
         >
           <div className="relative text-center py-10 overflow-hidden">
-            <h1 ref={headingRef}
-    className={`reveal-wipe ${headingVisible ? "is-visible" : ""}  invert relative z-10 text-[4vw] text-[#0c0c0c] p-[30px]`}>
+            <h1
+              ref={headingRef}
+              className={`reveal-wipe ${
+                headingVisible ? "is-visible" : ""
+              } invert relative z-10 text-[8vw] md:text-[4vw] text-[#0c0c0c] p-[30px]`}
+            >
               Fun Fact
             </h1>
           </div>
         </div>
       </div>
 
-      <div className="mt-[120px]">
+      <div className="mt-[60px] md:mt-[120px]">
         <SkillsMarquee />
       </div>
     </div>
