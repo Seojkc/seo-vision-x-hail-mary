@@ -6,6 +6,11 @@ import React from "react";
  * Edit the CONTENT block below with your own name, role, tagline,
  * resume link, email, and social URLs. Everything else (styles,
  * layout, hover interactions) works as-is.
+ *
+ * Responsive behavior:
+ *  - Desktop (≥769px): unchanged — single row, no wrapping.
+ *  - Mobile (≤768px): stacks into three rows (name → resume/email → social),
+ *    with all sizes scaled down for smaller screens.
  */
 
 const CONTENT = {
@@ -278,6 +283,87 @@ export default function Contacts() {
           outline:1px solid var(--brass);
           outline-offset:3px;
         }
+
+        /* ============================================================
+           MOBILE — everything above this point is untouched (desktop
+           stays exactly as-is). Below 769px the single row becomes
+           three stacked rows: name → resume/email → social, with
+           sizes scaled down to fit small screens.
+           ============================================================ */
+        @media (max-width: 768px){
+          .ef-root{
+            padding:3.5rem 1.5rem 2rem;
+            overflow-x:hidden;
+          }
+
+          .ef-inner{
+            flex-direction:column;
+            flex-wrap:wrap;
+            align-items:center;
+            justify-content:flex-start;
+            width:100%;
+            min-width:0;
+            padding-right:0;
+            gap:2.25rem;
+          }
+
+          /* Row 1: name */
+          .ef-name-col{
+            width:100%;
+            display:flex;
+            justify-content:center;
+            padding-right:0;
+          }
+          .ef-name{
+            font-size:clamp(2.2rem, 12vw, 3.2rem);
+            white-space:normal;
+            text-align:center;
+          }
+          .ef-badge{
+            width:clamp(3.6rem, 18vw, 4.6rem);
+            height:clamp(3.6rem, 18vw, 4.6rem);
+          }
+          .ef-badge text{ font-size:7.4px; }
+
+          /* Row 2: resume + email */
+          .ef-contact-col{
+            width:100%;
+            align-items:center;
+            gap:1rem;
+          }
+          .ef-resume{
+            padding:0.7rem 1.3rem;
+            font-size:0.72rem;
+          }
+          .ef-email{
+            font-size:0.82rem;
+          }
+
+          /* Row 3: social */
+          .ef-social-col{
+            width:100%;
+            align-items:center;
+            gap:0.7rem;
+          }
+          .ef-social-heading{
+            width:auto;
+            text-align:center;
+            border-bottom:none;
+            padding-bottom:0;
+          }
+          .ef-socials a{
+            width:34px;height:34px;
+          }
+          .ef-socials a svg{ width:13px; height:13px; }
+
+          .ef-bottom{
+            margin-top:2.5rem;
+            padding-top:1.25rem;
+            justify-content:center;
+            text-align:center;
+            font-size:0.7rem;
+          }
+        }
       `}</style>
 
       <div className="ef-inner overflow-hidden py-[100px]">
@@ -285,7 +371,7 @@ export default function Contacts() {
           <h1 className="ef-name">{CONTENT.firstName} {CONTENT.lastName}</h1>
 
           
-          <div className="ef-badge" >
+          <div className="ef-badge hidden md:block " >
             <svg viewBox="0 0 100 100">
               <defs>
                 <path
@@ -305,7 +391,7 @@ export default function Contacts() {
 
         </div>
 
-        <div className="ef-contact-col">
+        <div className="ef-contact-col py-[50px]">
           <a className="ef-resume" href={CONTENT.resumeHref} download>
             Resume
             <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">

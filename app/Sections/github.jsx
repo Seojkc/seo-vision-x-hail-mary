@@ -248,7 +248,7 @@ function CardContent({ card, cardPxWidth, hovered, isMobile = false }) {
 
       {/* commits badge -- top right */}
       {card.commits != null && card.commits !== 0 && (
-        <div className="old-standard-tt-regular absolute top-10 left-2.5 flex items-center gap-1 px-2 py-1">
+        <div className="old-standard-tt-regular absolute top-5 md:top-10 left-2.5 flex items-center gap-1 px-2 py-1">
           <span className="text-white/50 tracking-tight" style={{ fontSize: badgeSize + 6 }}>
             {card.commits} Commits
           </span>
