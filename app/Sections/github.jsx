@@ -4,6 +4,21 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import useScrollReveal from "../Components/useScrollReveal"
 
+/* =========================================================================
+   NEW: mobile breakpoint hook
+   ========================================================================= */
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 // ---- Every card is the same shape now ----
 //   heading   -> always shown
 //   subheading-> revealed on hover, typed out character by character
@@ -175,23 +190,47 @@ function useTypewriter(text, active, speedMs = 16) {
 
   return typed;
 }
-
-function CardContent({ card, cardPxWidth, hovered }) {
-  const fontSize = headingFontSize(cardPxWidth) * 1.5;
-  const subFontSize = subheadingFontSize(cardPxWidth) * 1.5;
+function CardContent({ card, cardPxWidth, hovered, isMobile = false }) {
+  // NEW: mobile gets a smaller multiplier so text doesn't feel oversized
+  // relative to the compact 240px slider card
+  const fontSize = headingFontSize(cardPxWidth) * (isMobile ? 1.15 : 1.5);
+  const subFontSize = subheadingFontSize(cardPxWidth) * (isMobile ? 1.1 : 1.5);
   const badgeSize = badgeFontSize(cardPxWidth);
   const blurPx = glassBlurPx(cardPxWidth);
   const pad = panelPaddingPx(cardPxWidth);
 
-  const typedSubheading = useTypewriter(card.subheading, hovered);
-  const stillTyping = hovered && typedSubheading.length < (card.subheading?.length ?? 0);
+  // NEW: mobile has no hover, so once a card becomes active (`hovered` is
+  // driven by isCenter from the slider) wait 1s before revealing the panel —
+  // gives it a beat to settle into center first
+  const [mobileRevealed, setMobileRevealed] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    if (!hovered) {
+      setMobileRevealed(false);
+      return;
+    }
+    const id = setTimeout(() => setMobileRevealed(true), 1000);
+    return () => clearTimeout(id);
+  }, [isMobile, hovered]);
+
+  // typewriter only starts once the panel is actually revealed
+  const typingActive = isMobile ? mobileRevealed : hovered;
+  const typedSubheading = useTypewriter(card.subheading, typingActive);
+  const stillTyping = typingActive && typedSubheading.length < (card.subheading?.length ?? 0);
+
+  // on mobile this replaces group-hover as what drives the panel open state
+  const panelRevealed = isMobile ? mobileRevealed : hovered;
 
   return (
     <div
-      className="relative w-full h-full old-standard-tt-regular transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.015]"
+      className={`relative w-full h-full old-standard-tt-regular transition-transform duration-500 ease-out will-change-transform ${
+        isMobile ? "" : "group-hover:scale-[1.015]"
+      }`}
       style={{
         background: GLASS_MESH,
         transformStyle: "preserve-3d",
+        transform: isMobile && panelRevealed ? "scale(1.015)" : undefined,
       }}
     >
       {/* frosted glass panel -- blur scales with card size so small cards
@@ -216,29 +255,46 @@ function CardContent({ card, cardPxWidth, hovered }) {
         </div>
       )}
 
-      {/* bottom text panel -- padding scales with card size so tiny cards
-          never clip the subheading out entirely */}
+      {/* bottom text panel -- padding scales with card size; on mobile the
+          "group-hover" position toggle is replaced with an inline style
+          driven by the 1s-delayed panelRevealed state */}
       <div
-        className="absolute bottom-[10%] group-hover:bottom-[15%] left-0 right-0 transition-[bottom] duration-500 ease-out"
+        className={`absolute left-0 right-0 transition-[bottom] duration-500 ease-out ${
+          isMobile ? "" : "bottom-[10%] group-hover:bottom-[15%]"
+        }`}
         style={{
           paddingLeft: pad.x,
           paddingRight: pad.x,
           paddingBottom: pad.y,
           paddingTop: pad.y,
           transitionTimingFunction: REVEAL_EASE,
+          bottom: isMobile ? (panelRevealed ? "15%" : "10%") : undefined,
         }}
       >
         <h3
-          className="text-white old-standard-tt-regular font-medium leading-tight transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
-          style={{ fontSize, transitionTimingFunction: REVEAL_EASE }}
+          className={`text-white old-standard-tt-regular font-medium leading-tight transition-transform duration-500 ease-out ${
+            isMobile ? "" : "group-hover:-translate-y-0.5"
+          }`}
+          style={{
+            fontSize,
+            transitionTimingFunction: REVEAL_EASE,
+            transform: isMobile && panelRevealed ? "translateY(-2px)" : undefined,
+          }}
         >
           {card.heading}
         </h3>
 
-        {/* subheading -- fades in and types out character by character while hovered */}
+        {/* subheading -- fades in + types out; on mobile driven by the
+            1s-delayed timer instead of group-hover */}
         <div
-          className="overflow-visible opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
-          style={{ transitionTimingFunction: REVEAL_EASE, transitionDelay: "80ms" }}
+          className={`overflow-visible transition-opacity duration-300 ease-out ${
+            isMobile ? "" : "opacity-0 group-hover:opacity-100"
+          }`}
+          style={{
+            transitionTimingFunction: REVEAL_EASE,
+            transitionDelay: "80ms",
+            opacity: isMobile ? (panelRevealed ? 1 : 0) : undefined,
+          }}
         >
           <p
             className="text-white/80 leading-tight pt-0.5"
@@ -254,12 +310,7 @@ function CardContent({ card, cardPxWidth, hovered }) {
     </div>
   );
 }
-
-// ---- ProjectCard ----
-// left/top/width/height stay pinned at the card's FINAL layout values the
-// whole time. Only `transform` animates, between a "collapsed onto the
-// seed card" state and "settled at final spot" -- that's what makes the
-// spiral-bloom reveal run on the GPU instead of thrashing layout.
+// ---- ProjectCard (desktop spiral) -- unchanged ----
 function ProjectCard({
   card,
   cardPxWidth,
@@ -305,7 +356,116 @@ function ProjectCard({
   );
 }
 
-// ---- "My Week in Code" -- daily coding hours as an animated progress list ----
+/* =========================================================================
+   NEW: mobile infinite center-focus card slider
+   -------------------------------------------------------------------------
+   Only shows cards with commits > 0. All cards are identical size.
+   Center card: scale 1 / opacity 1. Immediate neighbors: scale 0.8 /
+   opacity 0.7. Anything further is hidden. Circular index math makes it
+   wrap around infinitely in both directions. Reuses CardContent so the
+   glass styling + typewriter subheading stay consistent with desktop.
+   ========================================================================= */
+const MOBILE_CARD_WIDTH = 240;
+const MOBILE_CARD_HEIGHT = MOBILE_CARD_WIDTH * CARD_ASPECT;
+const MOBILE_CARD_SPACING = MOBILE_CARD_WIDTH * 0.58;
+const SWIPE_THRESHOLD = 40;
+
+// shortest signed distance from `index` to `active`, wrapping around `total`
+function getCircularOffset(index, active, total) {
+  let diff = index - active;
+  const half = total / 2;
+  if (diff > half) diff -= total;
+  if (diff < -half) diff += total;
+  if (diff === -half) diff = half; // keep the boundary card on one consistent side
+  return diff;
+}
+
+function MobileGithubSlider({ cards }) {
+  const [active, setActive] = useState(0);
+  const touchStartX = useRef(null);
+  const total = cards.length;
+
+  const go = (dir) => setActive((prev) => (prev + dir + total) % total);
+
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    if (deltaX > SWIPE_THRESHOLD) go(-1);
+    else if (deltaX < -SWIPE_THRESHOLD) go(1);
+    touchStartX.current = null;
+  };
+
+  if (total === 0) return null;
+
+  return (
+    <div className="relative w-full py-16">
+      <div
+        className="relative w-full flex items-center justify-center overflow-hidden select-none"
+        style={{ height: MOBILE_CARD_HEIGHT + 24 }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {cards.map((card, i) => {
+          const offset = getCircularOffset(i, active, total);
+          const abs = Math.abs(offset);
+          const isCenter = offset === 0;
+          const hidden = abs > 1;
+
+          const scale = isCenter ? 1 : 0.8;
+          const opacity = hidden ? 0 : isCenter ? 1 : 0.7;
+          const translateX = offset * MOBILE_CARD_SPACING;
+          const zIndex = 10 - abs;
+
+          return (
+            <button
+              key={card.heading}
+              type="button"
+              aria-label={isCenter ? card.heading : `Show ${card.heading}`}
+              onClick={() => !isCenter && setActive(i)}
+              className="group absolute rounded-xl border border-black/10 shadow-md overflow-hidden text-left"
+              style={{
+                width: MOBILE_CARD_WIDTH,
+                height: MOBILE_CARD_HEIGHT,
+                transform: `translateX(${translateX}px) scale(${scale})`,
+                opacity,
+                zIndex,
+                transitionProperty: "transform, opacity",
+                transitionDuration: "500ms",
+                transitionTimingFunction: REVEAL_EASE,
+                cursor: isCenter ? "default" : "pointer",
+              }}
+            >
+              <CardContent card={card} cardPxWidth={MOBILE_CARD_WIDTH} hovered={isCenter} isMobile />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* dot indicator */}
+      <div className="flex items-center justify-center gap-2 mt-6">
+        {cards.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            aria-label={`Go to project ${i + 1}`}
+            onClick={() => setActive(i)}
+            className="rounded-full transition-all duration-300"
+            style={{
+              width: i === active ? 20 : 7,
+              height: 7,
+              backgroundColor: i === active ? "#0c0c0c" : "rgba(12,12,12,0.25)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- "My Week in Code" -- unchanged ----
 const weekData = [
   { day: "Sunday", hours: 7 },
   { day: "Monday", hours: 5 },
@@ -337,8 +497,6 @@ function useInView(options = { threshold: 0.3 }) {
   return [ref, inView];
 }
 
-// interpolates between two hex colors -- used so a row of discrete blocks
-// still reads as one smooth gradient sweep from block to block
 function hexToRgb(hex) {
   const clean = hex.replace("#", "");
   const bigint = parseInt(clean, 16);
@@ -355,24 +513,31 @@ function lerpColor(hexA, hexB, t) {
 
 const GRADIENT_START = "#1e3a8a";
 const GRADIENT_END = "#3b82f6";
-const BLOCK_HOURS = 0.5; // each block = 30 minutes
+const BLOCK_HOURS = 0.5;
+
+
+
 
 function WeekInCode() {
   const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
   const [ref, inView] = useInView({ threshold: 0.25 });
+  const isMobile = useIsMobile(); // NEW
 
   const maxHours = Math.max(...weekData.map((d) => d.hours));
   const bestDay = weekData.reduce((best, d) => (d.hours > best.hours ? d : best), weekData[0]);
-  // every row shows the same number of block slots, sized to the busiest day,
-  // so all the rows line up
   const totalBlocks = Math.round(maxHours / BLOCK_HOURS);
 
+  // NEW: smaller block size + tighter gap on mobile so a 13-block row
+  // (max hours 7 / 0.5) doesn't overflow a narrow screen
+  const blockSize = isMobile ? "1.35vh" : "2.3vh";
+  const blockGap = isMobile ? "0.25vh" : "0.4vh";
+
   return (
-    <div ref={ref} className="absolute text-black top-[60%] left-[5%] w-[42%] ">
-      <div className="flex items-baseline justify-between mb-8">
+    <div ref={ref} className="relative md:absolute text-black top-[60%] left-[5%] w-[42%] ">
+      <div className="flex items-baseline justify-between mb-0 md:mb-8">
         <h2
           ref={headingRef}
-          className={`reveal-wipe ${headingVisible ? "is-visible" : ""} text-black text-[4.4vw]  invert leading-none font-[800]`}
+          className={`reveal-wipe ${headingVisible ? "is-visible" : ""} text-black text-[10vw] md:text-[4.4vw]  invert leading-none font-[800]`}
         >
           My Week in Code
         </h2>
@@ -385,12 +550,12 @@ function WeekInCode() {
           return (
             <div key={entry.day} className="group flex items-center gap-4 py-[1.5vh]">
               <span
-                className="text-[2.8vh] leading-none w-[20%] shrink-0 transition-colors duration-300 text-end text-black/70 group-hover:text-black"
+                className="text-[2.8vh] leading-none w-[80%] shrink-0 transition-colors duration-300 text-end text-black/70 group-hover:text-black"
               >
                 {entry.day}
               </span>
 
-              <div className="flex items-center gap-[0.4vh] flex-1">
+              <div className="flex items-center flex-1" style={{ gap: blockGap }}>
                 {Array.from({ length: totalBlocks }).map((_, bIdx) => {
                   const filled = bIdx < filledBlocks;
                   const color = filled
@@ -402,8 +567,8 @@ function WeekInCode() {
                       key={bIdx}
                       className={`rounded-[3px] ${filled ? "" : "bg-black/[0.00]"}`}
                       style={{
-                        width: "2.3vh",
-                        height: "2.3vh",
+                        width: blockSize,
+                        height: blockSize,
                         backgroundColor: color,
                         opacity: inView ? 1 : 0,
                         transform: inView ? "scale(1)" : "scale(0.4)",
@@ -426,13 +591,12 @@ function WeekInCode() {
 
 
 
-const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)"; // overshoots then settles — good for "pop"
+
+const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
 const LETTER_DURATION = 600;
-const LETTER_DELAY_STEP = 60; // ms between each letter (200ms will feel slow letter-by-letter for a whole sentence)
+const LETTER_DELAY_STEP = 60;
 const LOGO_DURATION = 700;
 
-// turns a string into an array of animated letter spans, continuing the
-// delay index from `startIndex` so multiple words can cascade smoothly
 function renderLetters(text, startIndex, visible) {
   return text.split("").map((char, i) => (
     <span
@@ -455,13 +619,13 @@ function renderLetters(text, startIndex, visible) {
 
 export default function GithubSection() {
   const containerRef = useRef(null);
+  const headingRefUnused = null; // (kept for parity, unused)
   const [headingRef, headingVisible] = useScrollReveal({ threshold: 1 });
 
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  // flips once, the first time the card field scrolls into view --
-  // drives the spiral-bloom reveal of all ten project cards
-  const [revealed, setRevealed] = useState(false);
+  const isMobile = useIsMobile(); // NEW
 
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [revealed, setRevealed] = useState(false);
 
   const [visible, setVisible] = useState(false);
   const sectionRef = useRef(null);
@@ -474,7 +638,7 @@ export default function GithubSection() {
       ([entry]) => {
         if (entry.isIntersecting) {
           setVisible(true);
-          observer.disconnect(); // remove if you want it to replay on every scroll in/out
+          observer.disconnect();
         }
       },
       { threshold: 0.3 }
@@ -488,14 +652,13 @@ export default function GithubSection() {
   const part2 = "GitHub";
 
   const logoStyle = {
-    opacity: visible ? 0.5 : 0, // 0.5 to match your original opacity-50 end state
+    opacity: visible ? 0.5 : 0,
     transform: visible ? "scale(1) translateY(0px)" : "scale(0.3) translateY(20px)",
     transitionProperty: "transform, opacity",
     transitionDuration: `${LOGO_DURATION}ms`,
     transitionTimingFunction: SPRING_EASE,
     willChange: "transform, opacity",
   };
-
 
   useEffect(() => {
     const el = containerRef.current;
@@ -527,7 +690,10 @@ export default function GithubSection() {
   const { width, height } = size;
   const dotX = width * DOT_X_RATIO;
   const dotY = height * DOT_Y_RATIO;
-  const seed = cards[cards.length - 1]; // origin point every card blooms from
+  const seed = cards[cards.length - 1];
+
+  // NEW: mobile only shows cards that actually have commits
+  const featuredCards = cards.filter((c) => c.commits > 0);
 
   return (
     <div
@@ -562,10 +728,10 @@ export default function GithubSection() {
         src="/Assets/git.png"
         alt="github logo"
         style={logoStyle}
-        className="w-[600px] h-[auto] invert object-contain absolute -right-70 -top-40"
+        className="w-[600px] h-[auto] invert object-contain absolute -right-70 -top-40 hidden md:block"
       />
 
-      <h1 className="relative z-10 flex items-center justify-center gap-5 font-bold text-[4vw] text-[#0c0c0c] p-[30px]">
+      <h1 className="relative z-10 flex items-center justify-center gap-5 font-bold text-[8vw] md:text-[4vw] text-[#0c0c0c] p-[30px]">
         <span>{renderLetters(part1, 0, visible)}</span>
         <span className="text-elegant-red">
           {renderLetters(part2, part1.length, visible)}
@@ -573,80 +739,82 @@ export default function GithubSection() {
       </h1>
     </div>
 
-      <div ref={containerRef} className="relative w-full pb-10" style={{ height: "170vh" }}>
-        {width > 0 && (
-          <>
-            {/* dot / logo, spiral origin */}
-            <div
-              className="absolute rounded-full overflow-visible"
-              style={{
-                left: dotX,
-                top: dotY,
-                width: Math.max(width * 0.045, 36),
-                height: Math.max(width * 0.045, 36),
-                transform: "translate(-50%, -50%)",
-                zIndex: 5,
-              }}
-            >
-              <div className="absolute inset-[-35%] rounded-full  blur-xl" />
-              <div className="absolute inset-0 rounded-full bg-white ">
-                <a href="https://github.com/Seojkc">
-                  <Image
-                    src="/Assets/git.png"
-                    alt="Logo"
-                    fill
-                    sizes="80px"
-                    className="object-contain invert"
-                  />
-                </a>
+      {isMobile ? (
+        // -------- mobile: identical-size infinite center-focus slider --------
+        <div ref={containerRef} className="relative w-full">
+          <MobileGithubSlider cards={featuredCards} />
+        </div>
+      ) : (
+        // -------- desktop: unchanged spiral scatter --------
+        <div ref={containerRef} className="relative w-full pb-10" style={{ height: "170vh" }}>
+          {width > 0 && (
+            <>
+              {/* dot / logo, spiral origin */}
+              <div
+                className="absolute rounded-full overflow-visible"
+                style={{
+                  left: dotX,
+                  top: dotY,
+                  width: Math.max(width * 0.045, 36),
+                  height: Math.max(width * 0.045, 36),
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 5,
+                }}
+              >
+                <div className="absolute inset-[-35%] rounded-full  blur-xl" />
+                <div className="absolute inset-0 rounded-full bg-white ">
+                  <a href="https://github.com/Seojkc">
+                    <Image
+                      src="/Assets/git.png"
+                      alt="Logo"
+                      fill
+                      sizes="80px"
+                      className="object-contain invert"
+                    />
+                  </a>
+                </div>
               </div>
-            </div>
 
-            {cards.map((card, i) => {
-              const w = width * card.w;
-              const h = w * CARD_ASPECT;
-              const left = width * card.x;
-              const top = height * card.y;
+              {cards.map((card, i) => {
+                const w = width * card.w;
+                const h = w * CARD_ASPECT;
+                const left = width * card.x;
+                const top = height * card.y;
 
-              const isSeed = i === cards.length - 1;
-              const originLeft = width * seed.x;
-              const originTop = height * seed.y;
-              const originW = width * seed.w;
+                const isSeed = i === cards.length - 1;
+                const originLeft = width * seed.x;
+                const originTop = height * seed.y;
+                const originW = width * seed.w;
 
-              // how far / how much smaller this card starts, relative to
-              // its own final slot -- purely transform math, no layout
-              // thrash, which is what keeps the reveal smooth
-              const dx = isSeed ? 0 : originLeft - left;
-              const dy = isSeed ? 0 : originTop - top;
-              const scaleRatio = isSeed ? 1 : originW / w;
-              const originRotate = isSeed ? card.rotate : seed.rotate;
+                const dx = isSeed ? 0 : originLeft - left;
+                const dy = isSeed ? 0 : originTop - top;
+                const scaleRatio = isSeed ? 1 : originW / w;
+                const originRotate = isSeed ? card.rotate : seed.rotate;
 
-              // cards nearest the seed lead the bloom; the big content
-              // cards arrive last, so the spiral visibly draws itself
-              // outward from the origin point
-              const delay = (cards.length - 1 - i) * 70;
+                const delay = (cards.length - 1 - i) * 70;
 
-              return (
-                <ProjectCard
-                  key={i}
-                  card={card}
-                  cardPxWidth={w}
-                  cardPxHeight={h}
-                  left={left}
-                  top={top}
-                  zIndex={10 + i}
-                  revealed={revealed}
-                  dx={dx}
-                  dy={dy}
-                  scaleRatio={scaleRatio}
-                  originRotate={originRotate}
-                  delay={delay}
-                />
-              );
-            })}
-          </>
-        )}
-      </div>
+                return (
+                  <ProjectCard
+                    key={i}
+                    card={card}
+                    cardPxWidth={w}
+                    cardPxHeight={h}
+                    left={left}
+                    top={top}
+                    zIndex={10 + i}
+                    revealed={revealed}
+                    dx={dx}
+                    dy={dy}
+                    scaleRatio={scaleRatio}
+                    originRotate={originRotate}
+                    delay={delay}
+                  />
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
 
       <WeekInCode />
     </div>
