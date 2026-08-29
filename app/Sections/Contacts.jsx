@@ -97,7 +97,8 @@ export default function Contacts() {
           margin:0;
           font-family:Georgia,"Cormorant Garamond",serif;
           font-weight:600;
-          line-height:1;
+          line-height:1.5;
+          padding:15px 0px;
           font-size:clamp(3.4rem,5.2vw,7rem);
           letter-spacing:0.04em;
          
