@@ -97,7 +97,7 @@ export default function Contacts() {
           margin:0;
           font-family:Georgia,"Cormorant Garamond",serif;
           font-weight:600;
-          line-height:0.95;
+          line-height:1;
           font-size:clamp(3.4rem,5.2vw,7rem);
           letter-spacing:0.04em;
          
@@ -368,7 +368,9 @@ export default function Contacts() {
 
       <div className="ef-inner overflow-visible md:overflow-hidden py-[100px]">
         <div className="ef-name-col ">
-          <h1 className="ef-name bg-[linear-gradient(to_right,#cfcfcf_20%,transparent_120%)] md:bg-[linear-gradient(to_right,#cfcfcf_10%,transparent_100%)]">{CONTENT.firstName} {CONTENT.lastName}</h1>
+          <h1 className="ef-name bg-[linear-gradient(to_right,#cfcfcf_20%,transparent_120%)] 
+          md:bg-[linear-gradient(to_right,#cfcfcf_10%,transparent_100%)]">
+            {CONTENT.firstName} {CONTENT.lastName}</h1>
 
           
           <div className="ef-badge hidden md:block " >
