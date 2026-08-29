@@ -339,15 +339,27 @@ function renderLetters(text, startIndex, visible) {
   ));
 }
 
-
+  // Works for both mouse and touch events — touch events carry
+  // coordinates on e.touches / e.changedTouches instead of directly
+  // on the event.
+  function getPoint(e) {
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
 
   function dragStart(e) {
+    const point = getPoint(e);
     const rect = imageWrapperRef.current.getBoundingClientRect();
     const boundary = boundaryRef.current.getBoundingClientRect();
 
     mouseOffset.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: point.x - rect.left,
+      y: point.y - rect.top,
     };
 
     const startX = rect.left - boundary.left;
@@ -365,11 +377,15 @@ function renderLetters(text, startIndex, visible) {
   function dragMove(e) {
     if (!draggingRef.current || !boundaryRef.current || !imageWrapperRef.current) return;
 
+    // Stop the page from scrolling while a touch-drag is in progress.
+    if (e.touches) e.preventDefault();
+
+    const point = getPoint(e);
     const boundary = boundaryRef.current.getBoundingClientRect();
     const el = imageWrapperRef.current.getBoundingClientRect();
 
-    let x = e.clientX - mouseOffset.current.x - boundary.left;
-    let y = e.clientY - mouseOffset.current.y - boundary.top;
+    let x = point.x - mouseOffset.current.x - boundary.left;
+    let y = point.y - mouseOffset.current.y - boundary.top;
 
     x = Math.min(Math.max(x, 0), boundary.width - el.width);
     y = Math.min(Math.max(y, 0), boundary.height - el.height);
@@ -451,11 +467,24 @@ function renderLetters(text, startIndex, visible) {
   }, []);
 
   useEffect(() => {
+    // Mouse (desktop) drag tracking.
     window.addEventListener("mousemove", dragMove);
     window.addEventListener("mouseup", dragEnd);
+
+    // Touch (mobile) drag tracking — press and hold the shuttle, move
+    // your finger, and lift to release. touchmove must be non-passive
+    // so dragMove can call preventDefault() and stop the page scrolling
+    // while a drag is active.
+    window.addEventListener("touchmove", dragMove, { passive: false });
+    window.addEventListener("touchend", dragEnd);
+    window.addEventListener("touchcancel", dragEnd);
+
     return () => {
       window.removeEventListener("mousemove", dragMove);
       window.removeEventListener("mouseup", dragEnd);
+      window.removeEventListener("touchmove", dragMove);
+      window.removeEventListener("touchend", dragEnd);
+      window.removeEventListener("touchcancel", dragEnd);
     };
   }, []);
 
@@ -488,7 +517,7 @@ function renderLetters(text, startIndex, visible) {
           {/* main draggable ship — higher z-index so the follower sits under it */}
           <div
             ref={imageWrapperRef}
-            className={`absolute pointer-events-auto z-22 top-[16vw] right-[4vw] ${
+            className={`absolute pointer-events-auto z-22 top-[78vw] right-[4vw] md:top-[16vw] md:right-[4vw] touch-none select-none ${
               dragging ? "cursor-grabbing" : "cursor-grab"
             }`}
             style={
@@ -504,12 +533,13 @@ function renderLetters(text, startIndex, visible) {
                 : { transform: `rotate(${BASE_ROTATION}deg)` }
             }
             onMouseDown={dragStart}
+            onTouchStart={dragStart}
           >
             <Image
               alt="space shuttle"
               width={700}
               height={500}
-              className="w-[24vw] h-auto"
+              className="w-[66vw] md:w-[46vw] sm:w-[24vw] h-auto"
               src="/Assets/space_shuttle.png"
               draggable={false}
             />
@@ -534,28 +564,66 @@ function renderLetters(text, startIndex, visible) {
               alt="xenon ship"
               width={300}
               height={500}
-              className="w-[18vw] h-auto rotate-50"
+              className="w-[34vw] sm:w-[18vw] h-auto rotate-50"
               src="/Assets/xenon-ship.png"
               draggable={false}
             />
           </div>
 
-          <div ref={sectionRef} className="absolute mt-[16vw] ml-20 z-20">
-      <div className="flex align-down">
-        <h1 className="text-[10vw] text-elegant-red">
-          {renderLetters(line1, line1Start, visible)}
-        </h1>
-        <h1 className="mt-26 ml-6 text-[5vw] text-[#9c9a9a]">
-          {renderLetters(line2, line2Start, visible)}
-        </h1>
-      </div>
-      <h1 className="text-[15vw] mt-[-150px] ml-[-5px] text-[#cfcfcf]">
-        {renderLetters(line3, line3Start, visible)}
+
+
+
+
+
+          <div
+  ref={sectionRef}
+  className="absolute inset-x-0 px-6 sm:px-20 mt-[28vw] sm:mt-[16vw] z-20 max-w-full overflow-hidden"
+>
+  <div className="flex flex-col">
+    <div className="flex items-end flex-nowrap">
+      <h1
+        className="text-elegant-red leading-none whitespace-nowrap"
+        style={{ fontSize: "clamp(2.5rem, 11vw, 7rem)" }}
+      >
+        {renderLetters(line1, line1Start, visible)}
       </h1>
-      <h1 className="text-[2vw] mt-[-80px] ml-[10px] text-[#9c9a9a]">
-        {renderLetters(line4, line4Start, visible)}
+      <h1
+        className="ml-2 sm:ml-4 text-[#9c9a9a] leading-none whitespace-nowrap"
+        style={{ fontSize: "clamp(1.25rem, 5.5vw, 3.5rem)" }}
+      >
+        {renderLetters(line2, line2Start, visible)}
       </h1>
     </div>
+
+    <h1
+      className="text-[#cfcfcf] leading-none whitespace-nowrap"
+      style={{
+        fontSize: "clamp(3.75rem, 16.5vw, 10.5rem)",
+        marginTop: "clamp(0.25rem, 1.5vw, 1rem)",
+        marginLeft: "-0.5vw",
+      }}
+    >
+      {renderLetters(line3, line3Start, visible)}
+    </h1>
+
+    <h1
+      className="text-[#9c9a9a] leading-none"
+      style={{
+        fontSize: "clamp(0.85rem, 3vw, 1.5rem)",
+        marginTop: "clamp(0.75rem, 3vw, 2rem)",
+        marginLeft: "1vw",
+        maxWidth: "90vw",
+        overflowWrap: "break-word",
+      }}
+    >
+      {renderLetters(line4, line4Start, visible)}
+    </h1>
+  </div>
+</div>
+
+
+
+
 
           {dragMeComment && (
             <Image
@@ -572,7 +640,7 @@ function renderLetters(text, startIndex, visible) {
                     }
                   : undefined
               }
-              className="absolute z-24  opacity-70"
+              className="absolute z-24 w-[16vw] sm:w-auto opacity-70 hidden md:block"
               src="/Assets/drag_me1.png"
             />
           )}
