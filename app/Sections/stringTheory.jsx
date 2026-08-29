@@ -242,7 +242,7 @@ function NetBackground({ attractors = [] }) {
       container.removeEventListener("touchend", handleMouseLeave);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attractors]);
+  }, [attractors, isMobile]);
 
   return (
     <div ref={containerRef} className="absolute inset-0 z-0 bg-black">

@@ -151,9 +151,9 @@ function ScaledScene({
   );
 }
 
-
-
-
+/* =========================================================================
+   SceneItem — DESKTOP ONLY (unchanged behavior)
+   ========================================================================= */
 function SceneItem({
   x,
   y,
@@ -164,11 +164,10 @@ function SceneItem({
   label,
   labelPos = "bottom",
   labelRotate = -2,
-  revealThreshold=0.5, // NEW: when set, this item gets its own scroll-triggered reveal at this threshold
-  slideDistance = 24, // NEW: how far it slides up on reveal (desktop keeps default 24)
+  revealThreshold = 0.5,
+  slideDistance = 24,
   children,
 }) {
-  // Only used when revealThreshold is provided (mobile items)
   const [ownRef, ownRevealed] = useScrollReveal({ threshold: revealThreshold ?? 1 });
   const gateActive = revealThreshold != null;
   const effectiveVisible = gateActive ? visible && ownRevealed : visible;
@@ -230,8 +229,77 @@ function SceneItem({
   );
 }
 
+/* =========================================================================
+   MobileSceneItem — scroll-linked (opacity + side-slide are driven every
+   frame by FunFacts' single rAF loop via `registerItem`, not by React
+   state, so the motion stays smooth and tied 1:1 to scroll position).
+   ========================================================================= */
+function MobileSceneItem({
+  x,
+  y,
+  w,
+  rotate = 0,
+  side = "left",
+  label,
+  labelPos = "bottom",
+  labelRotate = -2,
+  registerItem,
+  itemId,
+  children,
+}) {
+  return (
+    <div
+      ref={registerItem(itemId, side, rotate)}
+      className="absolute"
+      style={{
+        left: x,
+        top: y,
+        width: w,
+        opacity: 0.4,
+        willChange: "transform, opacity",
+      }}
+    >
+      {label && labelPos === "top" && (
+        <span
+          className="scene-label"
+          style={{ bottom: "100%", marginBottom: 10, transform: `rotate(${labelRotate}deg)` }}
+        >
+          {label}
+        </span>
+      )}
 
+      {children}
 
+      {label && labelPos === "bottom" && (
+        <span
+          className="scene-label"
+          style={{ top: "100%", marginTop: 10, transform: `rotate(${labelRotate}deg)` }}
+        >
+          {label}
+        </span>
+      )}
+
+      {label && labelPos === "right" && (
+        <span className="scene-label">{label}</span>
+      )}
+
+      <style jsx>{`
+        .scene-label {
+          position: absolute;
+          left: 6px;
+          font-family: var(--font-mono, ui-monospace, monospace);
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          color: #0c0c0c;
+          white-space: nowrap;
+          padding: 2px 0;
+          border-bottom: 1.5px dashed rgba(12, 12, 12, 0.55);
+        }
+      `}</style>
+    </div>
+  );
+}
 
 /* CoffeeToggle — unchanged */
 const GIF_SRC = "/Assets/FunFact/coffee-mug-video-2.gif";
@@ -462,6 +530,71 @@ export default function FunFacts() {
     intervalRef.current = null;
   };
 
+  /* -----------------------------------------------------------------------
+     Mobile scroll-linked scene animation.
+     One rAF loop, driving every registered item directly via DOM style
+     writes (no React state per frame → stays smooth).
+
+     For each item:
+       p = 0   → item is entering at the bottom edge of the viewport
+       p = 0.5 → item is centered in the viewport
+       p = 1   → item is exiting at the top edge of the viewport
+
+     opacity: 0.4 at the edges (p=0 or p=1) → 1.0 at the center (p=0.5)
+     translateX: slides in from its side (left/right) as it approaches
+                 center (p: 0 → 0.5), then stays settled while it fades
+                 back out on the way past center (p: 0.5 → 1)
+     ----------------------------------------------------------------------- */
+  const mobileItemsRef = useRef(new Map());
+
+  const registerItem = useCallback(
+    (id, side, rotate) => (el) => {
+      if (el) {
+        mobileItemsRef.current.set(id, { el, side, rotate });
+      } else {
+        mobileItemsRef.current.delete(id);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const sideMultiplier = { left: -1, right: 1 };
+    let frameId;
+
+    const update = () => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+
+      mobileItemsRef.current.forEach(({ el, side, rotate }) => {
+        const rect = el.getBoundingClientRect();
+        const centerY = rect.top + rect.height / 2;
+
+        let p = 1 - centerY / vh;
+        p = Math.min(1, Math.max(0, p));
+
+        const distFromCenter = Math.abs(p - 0.5) * 2; // 0 at center, 1 at edges
+        const opacity = Math.max(0.4, 1 - distFromCenter * 0.6);
+
+        let translateX = 0;
+        if (p < 0.5) {
+          const t = p / 0.5;
+          const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+          translateX = (1 - eased) * 70 * sideMultiplier[side];
+        }
+
+        el.style.opacity = opacity.toFixed(3);
+        el.style.transform = `translate3d(${translateX.toFixed(2)}px, 0, 0) rotate(${rotate}deg)`;
+      });
+
+      frameId = requestAnimationFrame(update);
+    };
+
+    frameId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frameId);
+  }, [isMobile]);
+
   return (
     <div
       className="relative w-full pb-[10vh] pt-[15vh] md:pb-[20vh] md:pt-[30vh]"
@@ -532,13 +665,14 @@ export default function FunFacts() {
         >
           {isMobile ? (
             <>
-              {/* -------- mobile: smaller images + more bottom padding between items -------- */}
-              <SceneItem
+              {/* -------- mobile: scroll-linked items -------- */}
+              <MobileSceneItem
+                itemId="night-window"
+                registerItem={registerItem}
                 x={70}
                 y={90}
                 w={260}
-                delay={0}
-                visible={visible}
+                side="left"
                 label="burning the midnight oil"
                 labelPos="bottom"
                 labelRotate={-1.5}
@@ -550,14 +684,15 @@ export default function FunFacts() {
                   alt="fun-fact-note"
                   src="/Assets/FunFact/night-window.png"
                 />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem
+              <MobileSceneItem
+                itemId="claude-gpt"
+                registerItem={registerItem}
                 x={155}
                 y={440}
                 w={110}
-                delay={80}
-                visible={visible}
+                side="right"
                 label="daily drivers"
                 labelPos="bottom"
                 labelRotate={2}
@@ -569,14 +704,15 @@ export default function FunFacts() {
                   alt="fun-fact-note"
                   src="/Assets/FunFact/claude-gpt.png"
                 />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem
+              <MobileSceneItem
+                itemId="wall-decor"
+                registerItem={registerItem}
                 x={140}
                 y={700}
                 w={140}
-                delay={140}
-                visible={visible}
+                side="left"
                 label="tiny jungle"
                 labelPos="bottom"
                 labelRotate={-1.5}
@@ -588,15 +724,16 @@ export default function FunFacts() {
                   alt="fun-fact-note"
                   src="/Assets/FunFact/wall-decor-4.png"
                 />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem
+              <MobileSceneItem
+                itemId="wall-poster"
+                registerItem={registerItem}
                 x={100}
                 y={980}
                 w={200}
                 rotate={-8}
-                delay={200}
-                visible={visible}
+                side="right"
                 label="one of my ❤️"
                 labelPos="bottom"
                 labelRotate={-6}
@@ -608,19 +745,27 @@ export default function FunFacts() {
                   alt="fun-fact-note"
                   src="/Assets/FunFact/wall-poster-2.png"
                 />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem x={175} y={1320} w={90} delay={260} visible={visible}>
+              <MobileSceneItem
+                itemId="coffee"
+                registerItem={registerItem}
+                x={175}
+                y={1320}
+                w={90}
+                side="left"
+              >
                 <CoffeeToggle visible={visible} />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem
+              <MobileSceneItem
+                itemId="bug-fix"
+                registerItem={registerItem}
                 x={105}
                 y={1520}
                 w={190}
                 rotate={-2}
-                delay={320}
-                visible={visible}
+                side="right"
                 label="works on my machine"
                 labelPos="bottom"
                 labelRotate={-2}
@@ -632,14 +777,15 @@ export default function FunFacts() {
                   alt="fun-fact-note"
                   src="/Assets/FunFact/bug-fix.png"
                 />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem
+              <MobileSceneItem
+                itemId="console-log"
+                registerItem={registerItem}
                 x={100}
                 y={1800}
                 w={200}
-                delay={380}
-                visible={visible}
+                side="left"
                 label="9999+ Bugs Fixed"
                 labelPos="bottom"
                 labelRotate={2}
@@ -651,14 +797,15 @@ export default function FunFacts() {
                   alt="fun-fact-note"
                   src="/Assets/FunFact/console-log-1.png"
                 />
-              </SceneItem>
+              </MobileSceneItem>
 
-              <SceneItem
+              <MobileSceneItem
+                itemId="flower-pot"
+                registerItem={registerItem}
                 x={135}
                 y={2080}
                 w={140}
-                delay={440}
-                visible={visible}
+                side="right"
               >
                 <div className="relative">
                   <Image
@@ -676,7 +823,7 @@ export default function FunFacts() {
                     src="/Assets/FunFact/flower-pot.png"
                   />
                 </div>
-              </SceneItem>
+              </MobileSceneItem>
             </>
           ) : (
             <>
@@ -836,7 +983,7 @@ export default function FunFacts() {
           className="absolute z-20 will-change-transform transition-all ease-out"
           style={{
             left: "50%",
-            top: isMobile ? "3%" : "36%",
+            top: isMobile ? "2%" : "36%",
             transitionDuration: "700ms",
             transform: visible
               ? `translate(-50%, -50%) scale(${isMobile ? 0.85 : 1.15})`
