@@ -4,8 +4,26 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import TypingSequence from "../Components/Typingsequence";
 
+
+
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+
 // Config for the net effect — tweak freely
 const SPACING = 98;
+const MOBILESPACING=60;
 const RADIUS = 160;
 const PULL_STRENGTH = 0.85;
 const EASE = 0.12;
@@ -19,8 +37,12 @@ const DEFAULT_ATTRACTOR_RADIUS = 220;
 const DEFAULT_ATTRACTOR_STRENGTH = 1.7;
 
 function NetBackground({ attractors = [] }) {
+  const isMobile = useIsMobile();
+
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+
+  let currentSpacing= isMobile?MOBILESPACING:SPACING;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,14 +57,14 @@ function NetBackground({ attractors = [] }) {
     const mouse = { x: -9999, y: -9999, active: false };
 
     function buildGrid() {
-      cols = Math.ceil(width / SPACING) + 2;
-      rows = Math.ceil(height / SPACING) + 2;
+      cols = Math.ceil(width / currentSpacing) + 2;
+      rows = Math.ceil(height / currentSpacing) + 2;
       points = [];
       for (let j = 0; j < rows; j++) {
         const row = [];
         for (let i = 0; i < cols; i++) {
-          const ox = i * SPACING;
-          const oy = j * SPACING;
+          const ox = i * currentSpacing;
+          const oy = j * currentSpacing;
           row.push({ ox, oy, x: ox, y: oy });
         }
         points.push(row);
@@ -492,22 +514,33 @@ function renderLetters(text, startIndex, visible) {
     <>
       <div ref={boundaryRef} className="relative h-[70rem] overflow-hidden ">
         <NetBackground attractors={attractors} />
-        <div
+          <div
             className="pointer-events-none absolute inset-0"
             style={{ background: "linear-gradient(to bottom,black, transparent 10%, transparent)" }}
           />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(to right,black, transparent 10%, transparent)" }}
-          />
+         
           <div
             className="pointer-events-none absolute inset-0"
             style={{ background: "linear-gradient(to top,black,black 5%, transparent 10%, transparent)" }}
           />
+
+          
           <div
-            className="pointer-events-none absolute inset-0"
+            className="pointer-events-none absolute inset-0 hidden md:block"
             style={{ background: "linear-gradient(to left,black, transparent 10%, transparent)" }}
           />
+           <div
+            className="pointer-events-none absolute inset-0  hidden md:block"
+            style={{ background: "linear-gradient(to right,black, transparent 10%, transparent)" }}
+          />
+          <div
+          className="pointer-events-none absolute inset-0 block md:hidden"
+          style={{ background: "linear-gradient(to left,black, transparent 4%, transparent)" }}
+        />
+         <div
+          className="pointer-events-none absolute inset-0  block md:hidden"
+          style={{ background: "linear-gradient(to right,black, transparent 4%, transparent)" }}
+        />
 
 
 

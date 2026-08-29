@@ -366,7 +366,7 @@ export default function Contacts() {
         }
       `}</style>
 
-      <div className="ef-inner overflow-hidden py-[100px]">
+      <div className="ef-inner overflow-visible md:overflow-hidden py-[100px]">
         <div className="ef-name-col ">
           <h1 className="ef-name bg-[linear-gradient(to_right,#cfcfcf_20%,transparent_120%)] md:bg-[linear-gradient(to_right,#cfcfcf_10%,transparent_100%)]">{CONTENT.firstName} {CONTENT.lastName}</h1>
 
