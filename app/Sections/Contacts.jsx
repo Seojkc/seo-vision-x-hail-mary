@@ -74,6 +74,7 @@ export default function Contacts() {
           flex:0 0 auto;
           min-width:0;
           position:relative; /* anchor for the badge */
+          padding:0px 30px;
         }
 
         .ef-eyebrow{
@@ -99,8 +100,7 @@ export default function Contacts() {
           line-height:0.95;
           font-size:clamp(3.4rem,5.2vw,7rem);
           letter-spacing:0.04em;
-          background:
-          linear-gradient(to right, #cfcfcf 10%, transparent 100%);
+         
           -webkit-background-clip:text;
           background-clip:text;
           color:transparent;
@@ -368,7 +368,7 @@ export default function Contacts() {
 
       <div className="ef-inner overflow-hidden py-[100px]">
         <div className="ef-name-col ">
-          <h1 className="ef-name">{CONTENT.firstName} {CONTENT.lastName}</h1>
+          <h1 className="ef-name bg-[linear-gradient(to_right,#cfcfcf_20%,transparent_120%)] md:bg-[linear-gradient(to_right,#cfcfcf_10%,transparent_100%)]">{CONTENT.firstName} {CONTENT.lastName}</h1>
 
           
           <div className="ef-badge hidden md:block " >
